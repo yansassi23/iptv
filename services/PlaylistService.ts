@@ -150,66 +150,106 @@ export class PlaylistService {
       return result;
     }
     
-    // Se há uma categoria forçada, usa ela como principal
+    // Clean and normalize the groupTitle
+    const cleanGroupTitle = groupTitle.trim();
+    
     if (forceCategory) {
-      console.log('forceCategory provided, processing...');
-      // Verifica se há subcategoria no groupTitle
-      if (groupTitle.includes('|')) {
-        console.log('groupTitle contains | separator');
-        const parts = groupTitle.split('|').map(part => part.trim());
-        console.log('Split parts:', parts);
-        // Se a primeira parte corresponde à categoria forçada, usa a segunda como subcategoria
-        if (parts.length >= 2 && parts[0].toLowerCase() === forceCategory.toLowerCase()) {
-          const result = { main: forceCategory, sub: parts[1] };
-          console.log('First part matches forceCategory - returning:', result);
-          return result;
-        }
-        // Se não corresponde, usa a segunda parte como subcategoria mesmo assim
+      console.log('forceCategory provided:', forceCategory);
+      
+      // Use forceCategory as main category
+      const mainCategory = forceCategory;
+      
+      // Extract subcategory from groupTitle
+      let subCategory: string | undefined;
+      
+      if (cleanGroupTitle.includes('|')) {
+        // Handle pipe-separated format: "Category | Subcategory"
+        const parts = cleanGroupTitle.split('|').map(part => part.trim()).filter(part => part);
+        console.log('Pipe-separated parts:', parts);
+        
         if (parts.length >= 2) {
-          const result = { main: forceCategory, sub: parts[1] };
-          console.log('Using second part as subcategory - returning:', result);
-          return result;
+          // Try to find a part that's different from the main category
+          const potentialSub = parts.find(part => 
+            part.toLowerCase() !== mainCategory.toLowerCase() &&
+            !this.isMainCategoryKeyword(part)
+          );
+          
+          if (potentialSub) {
+            subCategory = potentialSub;
+          } else {
+            // If no distinct part found, use the last part
+            subCategory = parts[parts.length - 1];
+          }
+        }
+      } else {
+        // Handle single string format
+        const normalizedGroupTitle = cleanGroupTitle.toLowerCase();
+        const normalizedForceCategory = mainCategory.toLowerCase();
+        
+        // Only use as subcategory if it's meaningfully different from main category
+        if (normalizedGroupTitle !== normalizedForceCategory && 
+            !this.isMainCategoryKeyword(cleanGroupTitle) &&
+            cleanGroupTitle.length > 0) {
+          subCategory = cleanGroupTitle;
         }
       }
-      // Se não há separador |, verifica se groupTitle é diferente da categoria forçada
-      const normalizedGroupTitle = groupTitle.toLowerCase().trim();
-      const normalizedForceCategory = forceCategory.toLowerCase().trim();
-      console.log('Comparing normalized values:');
-      console.log('  normalizedGroupTitle:', JSON.stringify(normalizedGroupTitle));
-      console.log('  normalizedForceCategory:', JSON.stringify(normalizedForceCategory));
       
-      // Se o groupTitle é igual à categoria forçada, não cria subcategoria
-      if (normalizedGroupTitle === normalizedForceCategory) {
-        const result = { main: forceCategory };
-        console.log('GroupTitle equals forceCategory - returning:', result);
-        return result;
+      // Avoid redundant subcategories
+      if (subCategory && subCategory.toLowerCase() === mainCategory.toLowerCase()) {
+        subCategory = undefined;
       }
       
-      // Se o groupTitle é diferente, usa como subcategoria
-      const result = { main: forceCategory, sub: groupTitle };
-      console.log('GroupTitle different from forceCategory - returning:', result);
+      const result = subCategory ? { main: mainCategory, sub: subCategory } : { main: mainCategory };
+      console.log('forceCategory result:', result);
       return result;
     }
     
+    // No forceCategory - extract both main and sub from groupTitle
     console.log('No forceCategory, processing groupTitle normally...');
-    // Se há separador |, divide em categoria principal e subcategoria
-    if (groupTitle.includes('|')) {
+    
+    if (cleanGroupTitle.includes('|')) {
       console.log('groupTitle contains | separator');
-      const parts = groupTitle.split('|').map(part => part.trim());
+      const parts = cleanGroupTitle.split('|').map(part => part.trim()).filter(part => part);
       console.log('Split parts:', parts);
+      
       if (parts.length >= 2) {
+        // First part becomes main category (normalized)
         const mainCategory = this.normalizeMainCategory(parts[0]);
-        const result = { main: mainCategory, sub: parts[1] };
-        console.log('Extracted from parts - returning:', result);
+        
+        // Find a suitable subcategory from remaining parts
+        const potentialSub = parts.slice(1).find(part => 
+          part.toLowerCase() !== mainCategory.toLowerCase() &&
+          !this.isMainCategoryKeyword(part)
+        );
+        
+        const subCategory = potentialSub || parts[1]; // Fallback to second part
+        
+        const result = { main: mainCategory, sub: subCategory };
+        console.log('Extracted from pipe-separated parts:', result);
         return result;
       }
     }
     
-    // Se não há separador, normaliza como categoria principal
-    const mainCategory = this.normalizeMainCategory(groupTitle);
+    // Single category - normalize as main category only
+    const mainCategory = this.normalizeMainCategory(cleanGroupTitle);
     const result = { main: mainCategory };
-    console.log('Normalized as main category - returning:', result);
+    console.log('Normalized as main category only:', result);
     return result;
+  }
+
+  static isMainCategoryKeyword(text: string): boolean {
+    if (!text) return false;
+    
+    const normalized = text.toLowerCase().trim();
+    const mainCategoryKeywords = [
+      'tv', 'filmes', 'filme', 'movies', 'movie', 'séries', 'series', 'serie',
+      'canais', 'canal', 'channels', 'channel', 'outros', 'other', 'geral', 'general'
+    ];
+    
+    return mainCategoryKeywords.some(keyword => 
+      const normalizedForceCategory = forceCategory.toLowerCase().trim();
+      normalized === keyword || normalized.includes(keyword)
+    );
   }
 
   static normalizeMainCategory(category: string): string {
