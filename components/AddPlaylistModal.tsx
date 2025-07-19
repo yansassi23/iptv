@@ -20,18 +20,23 @@ interface AddPlaylistModalProps {
   visible: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  defaultNamePrefix?: string;
 }
 
-export function AddPlaylistModal({ visible, onClose, onSuccess }: AddPlaylistModalProps) {
-  const [name, setName] = useState('');
+export function AddPlaylistModal({ visible, onClose, onSuccess, defaultNamePrefix }: AddPlaylistModalProps) {
+  const [name, setName] = useState(defaultNamePrefix || '');
   const [url, setUrl] = useState('');
   const [content, setContent] = useState('');
   const [mode, setMode] = useState<'url' | 'text' | 'file'>('url');
   const [fileName, setFileName] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Update name when defaultNamePrefix changes
+  useEffect(() => {
+    setName(defaultNamePrefix || '');
+  }, [defaultNamePrefix]);
   const resetForm = () => {
-    setName('');
+    setName(defaultNamePrefix || '');
     setUrl('');
     setContent('');
     setFileName('');

@@ -48,18 +48,6 @@ export default function HomeScreen() {
     }
   };
 
-  const getCategoryIcon = (categoryName: string) => {
-    if (categoryName === 'Filmes') {
-      return <Film size={16} color="#FF6B35" />;
-    }
-    if (categoryName === 'TV') {
-      return <Tv size={16} color="#FF6B35" />;
-    }
-    if (categoryName === 'Séries') {
-      return <Monitor size={16} color="#FF6B35" />;
-    }
-    return <Monitor size={16} color="#FF6B35" />;
-  };
 
   const getFilteredItems = () => {
     if (selectedCategory === 'all') {
@@ -69,6 +57,10 @@ export default function HomeScreen() {
     return category ? category.items : [];
   };
 
+  const getCategoryCount = (categoryName: string) => {
+    const category = categories.find(cat => cat.name === categoryName);
+    return category ? category.count : 0;
+  };
   const renderMediaItem = ({ item }: { item: MediaItem }) => (
     <MediaCard item={item} />
   );
@@ -110,12 +102,7 @@ export default function HomeScreen() {
         </View>
       ) : (
         <>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.categoriesContainer}
-            contentContainerStyle={styles.categoriesContent}
-          >
+          <View style={styles.fixedCategoriesContainer}>
             <TouchableOpacity
               style={[
                 styles.categoryChip,
@@ -130,27 +117,61 @@ export default function HomeScreen() {
                 Todos
               </Text>
             </TouchableOpacity>
-            {categories.map((category) => (
-              <TouchableOpacity
-                key={category.name}
-                style={[
-                  styles.categoryChip,
-                  selectedCategory === category.name && styles.categoryChipActive
-                ]}
-                onPress={() => setSelectedCategory(category.name)}
-              >
-                <View style={styles.categoryContent}>
-                  {getCategoryIcon(category.name)}
-                  <Text style={[
-                    styles.categoryText,
-                    selectedCategory === category.name && styles.categoryTextActive
-                  ]}>
-                    {category.name} ({category.count})
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+            
+            <TouchableOpacity
+              style={[
+                styles.categoryChip,
+                selectedCategory === 'TV' && styles.categoryChipActive
+              ]}
+              onPress={() => setSelectedCategory('TV')}
+            >
+              <View style={styles.categoryContent}>
+                <Tv size={16} color={selectedCategory === 'TV' ? '#FFF' : '#FF6B35'} />
+                <Text style={[
+                  styles.categoryText,
+                  selectedCategory === 'TV' && styles.categoryTextActive
+                ]}>
+                  TV ({getCategoryCount('TV')})
+                </Text>
+              </View>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.categoryChip,
+                selectedCategory === 'Séries' && styles.categoryChipActive
+              ]}
+              onPress={() => setSelectedCategory('Séries')}
+            >
+              <View style={styles.categoryContent}>
+                <Monitor size={16} color={selectedCategory === 'Séries' ? '#FFF' : '#FF6B35'} />
+                <Text style={[
+                  styles.categoryText,
+                  selectedCategory === 'Séries' && styles.categoryTextActive
+                ]}>
+                  Séries ({getCategoryCount('Séries')})
+                </Text>
+              </View>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.categoryChip,
+                selectedCategory === 'Filmes' && styles.categoryChipActive
+              ]}
+              onPress={() => setSelectedCategory('Filmes')}
+            >
+              <View style={styles.categoryContent}>
+                <Film size={16} color={selectedCategory === 'Filmes' ? '#FFF' : '#FF6B35'} />
+                <Text style={[
+                  styles.categoryText,
+                  selectedCategory === 'Filmes' && styles.categoryTextActive
+                ]}>
+                  Filmes ({getCategoryCount('Filmes')})
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
 
           <FlatList
             data={getFilteredItems()}
@@ -242,13 +263,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  categoriesContainer: {
-    maxHeight: 60,
-  },
-  categoriesContent: {
+  fixedCategoriesContainer: {
+    flexDirection: 'row',
     paddingHorizontal: 20,
     paddingVertical: 10,
     gap: 10,
+    flexWrap: 'wrap',
   },
   categoryChip: {
     backgroundColor: '#2A2A2A',
@@ -257,6 +277,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#444',
+    minWidth: 80,
   },
   categoryChipActive: {
     backgroundColor: '#FF6B35',

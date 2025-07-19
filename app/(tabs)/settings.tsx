@@ -14,14 +14,21 @@ import {
   Database,
   Wifi,
   HardDrive,
+  Tv,
+  Film,
+  Monitor,
+  Plus,
 } from 'lucide-react-native';
 import { PlaylistService } from '@/services/PlaylistService';
+import { AddPlaylistModal } from '@/components/AddPlaylistModal';
 
 export default function SettingsScreen() {
   const [storageInfo, setStorageInfo] = useState({
     totalPlaylists: 0,
     totalItems: 0,
   });
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [modalDefaultNamePrefix, setModalDefaultNamePrefix] = useState('');
 
   useEffect(() => {
     loadStorageInfo();
@@ -40,6 +47,10 @@ export default function SettingsScreen() {
     }
   };
 
+  const openAddModal = (categoryPrefix: string) => {
+    setModalDefaultNamePrefix(categoryPrefix);
+    setIsAddModalVisible(true);
+  };
   const clearAllData = () => {
     Alert.alert(
       'Limpar todos os dados',
@@ -102,6 +113,43 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Adicionar por categoria */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Adicionar Playlists</Text>
+          
+          <TouchableOpacity
+            style={styles.categoryAddButton}
+            onPress={() => openAddModal('Playlist de TV')}
+          >
+            <Tv size={20} color="#4CAF50" />
+            <Text style={[styles.actionText, { color: '#4CAF50' }]}>
+              Adicionar Lista de TV
+            </Text>
+            <Plus size={16} color="#4CAF50" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.categoryAddButton}
+            onPress={() => openAddModal('Playlist de Séries')}
+          >
+            <Monitor size={20} color="#9C27B0" />
+            <Text style={[styles.actionText, { color: '#9C27B0' }]}>
+              Adicionar Lista de Séries
+            </Text>
+            <Plus size={16} color="#9C27B0" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.categoryAddButton}
+            onPress={() => openAddModal('Playlist de Filmes')}
+          >
+            <Film size={20} color="#FF9800" />
+            <Text style={[styles.actionText, { color: '#FF9800' }]}>
+              Adicionar Lista de Filmes
+            </Text>
+            <Plus size={16} color="#FF9800" />
+          </TouchableOpacity>
+        </View>
         {/* Ações */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ações</Text>
@@ -148,7 +196,7 @@ export default function SettingsScreen() {
           <View style={styles.helpCard}>
             <Text style={styles.helpTitle}>Adicionar playlist:</Text>
             <Text style={styles.helpText}>
-              • Toque no botão "+" na tela inicial{'\n'}
+              • Use os botões de categoria acima ou o "+" na tela inicial{'\n'}
               • Cole sua URL M3U/M3U8 ou o conteúdo da playlist{'\n'}
               • O app irá organizar automaticamente por categorias
             </Text>
@@ -162,6 +210,16 @@ export default function SettingsScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <AddPlaylistModal
+        visible={isAddModalVisible}
+        onClose={() => setIsAddModalVisible(false)}
+        onSuccess={() => {
+          loadStorageInfo();
+          setIsAddModalVisible(false);
+        }}
+        defaultNamePrefix={modalDefaultNamePrefix}
+      />
     </View>
   );
 }
@@ -218,6 +276,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  categoryAddButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1F1F1F',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -234,6 +303,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 12,
+    flex: 1,
   },
   dangerText: {
     color: '#F44336',
