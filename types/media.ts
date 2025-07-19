@@ -3,7 +3,7 @@ export interface MediaItem {
   name: string;
   url: string;
   mainCategory: string;
-  subCategory?: string;
+  subCategory: string;
   tvgId?: string;
   tvgName?: string;
   tvgLogo?: string;

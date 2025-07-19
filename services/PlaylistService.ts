@@ -85,7 +85,7 @@ export class PlaylistService {
         // Agrupar itens por subcategoria
         const subcategoriesMap = new Map<string, MediaItem[]>();
         items.forEach(item => {
-          const subCat = item.subCategory || 'Geral';
+          const subCat = item.subCategory && item.subCategory.trim() ? item.subCategory : 'Geral';
           if (!subcategoriesMap.has(subCat)) {
             subcategoriesMap.set(subCat, []);
           }
@@ -144,7 +144,7 @@ export class PlaylistService {
     console.log('Input groupTitle:', JSON.stringify(groupTitle));
     
     if (!groupTitle || !groupTitle.trim()) {
-      const result = { main: 'Outros' };
+      const result = { main: 'Outros', sub: 'Geral' };
       console.log('No groupTitle - returning:', result);
       return result;
     }
@@ -175,7 +175,7 @@ export class PlaylistService {
     // Single category - check if it's a main category keyword
     if (this.isMainCategoryKeyword(cleanGroupTitle)) {
       const mainCategory = this.normalizeMainCategory(cleanGroupTitle);
-      const result = { main: mainCategory };
+      const result = { main: mainCategory, sub: 'Geral' };
       console.log('Recognized as main category:', result);
       return result;
     } else {
@@ -344,7 +344,7 @@ export class PlaylistService {
         }
         
         // Always use extracted subcategory if available
-        currentItem.subCategory = categories.sub;
+        currentItem.subCategory = categories.sub || 'Geral';
         
         console.log('Categoria final determinada:', {
           mainCategory: currentItem.mainCategory,
