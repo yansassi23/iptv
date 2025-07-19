@@ -17,6 +17,7 @@ import {
   SkipBack,
   SkipForward,
   ArrowLeft,
+  Maximize,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { PlayerService } from '@/services/PlayerService';
@@ -78,6 +79,15 @@ export default function PlayerScreen() {
     }
   };
 
+  const toggleFullScreen = async () => {
+    if (!videoRef.current) return;
+    
+    try {
+      await videoRef.current.presentFullscreenPlayer();
+    } catch (error) {
+      console.error('Erro ao entrar em tela cheia:', error);
+    }
+  };
   const skipBackward = async () => {
     if (!videoRef.current) return;
     
@@ -233,6 +243,12 @@ export default function PlayerScreen() {
                   <Volume2 size={24} color="#FFF" />
                 )}
               </TouchableOpacity>
+              
+              <View style={styles.spacer} />
+              
+              <TouchableOpacity style={styles.fullscreenButton} onPress={toggleFullScreen}>
+                <Maximize size={24} color="#FFF" />
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -349,6 +365,12 @@ const styles = StyleSheet.create({
     paddingBottom: 50,
   },
   volumeButton: {
+    padding: 12,
+  },
+  spacer: {
+    flex: 1,
+  },
+  fullscreenButton: {
     padding: 12,
   },
   emptyContainer: {
