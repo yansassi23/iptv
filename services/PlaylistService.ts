@@ -301,8 +301,34 @@ export class PlaylistService {
           }
         }
         
+        // Fallback para extração de group-title se não foi encontrado
+        if (!rawGroupTitle) {
+          // Tenta extrair group-title com aspas simples
+          const singleQuoteMatch = extinf.match(/group-title='([^']+)'/);
+          if (singleQuoteMatch) {
+            rawGroupTitle = singleQuoteMatch[1];
+          } else {
+            // Tenta extrair group-title sem aspas
+            const noQuoteMatch = extinf.match(/group-title=([^,\s]+)/);
+            if (noQuoteMatch) {
+              rawGroupTitle = noQuoteMatch[1];
+            } else {
+              // Última tentativa: busca por group-title seguido de qualquer coisa até vírgula ou fim
+              const flexibleMatch = extinf.match(/group-title=([^,]+)/);
+              if (flexibleMatch) {
+                rawGroupTitle = flexibleMatch[1].replace(/['"]/g, '').trim();
+              }
+            }
+          }
+        }
+        
+        console.log('=== EXTINF PARSING DEBUG ===');
+        console.log('Linha EXTINF completa:', line);
+        console.log('rawGroupTitle extraído:', JSON.stringify(rawGroupTitle));
+        
         // Extract categories from group-title
         const categories = this.extractCategories(rawGroupTitle);
+        console.log('Categorias extraídas:', categories);
         
         // Determine main category
         if (forceCategory) {
@@ -319,6 +345,12 @@ export class PlaylistService {
         
         // Always use extracted subcategory if available
         currentItem.subCategory = categories.sub;
+        
+        console.log('Categoria final determinada:', {
+          mainCategory: currentItem.mainCategory,
+          subCategory: currentItem.subCategory,
+          forceCategory: forceCategory
+        });
         
         // Extract name (everything after the last comma)
         const nameMatch = extinf.match(/,(.+)$/);
