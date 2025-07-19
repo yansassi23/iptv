@@ -4,7 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
+  useWindowDimensions,
   StatusBar,
   Platform,
 } from 'react-native';
@@ -23,9 +23,8 @@ import { useRouter } from 'expo-router';
 import { PlayerService } from '@/services/PlayerService';
 import { MediaItem } from '@/types/media';
 
-const { width, height } = Dimensions.get('window');
-
 export default function PlayerScreen() {
+  const { width, height } = useWindowDimensions();
   const [currentMedia, setCurrentMedia] = useState<MediaItem | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -170,7 +169,7 @@ export default function PlayerScreen() {
       >
         <Video
           ref={videoRef}
-          style={styles.video}
+          style={{ width, height }}
           source={{ uri: currentMedia.url }}
           useNativeControls={false}
           resizeMode={ResizeMode.CONTAIN}
@@ -267,8 +266,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   video: {
-    width,
-    height,
+    flex: 1,
   },
   loadingOverlay: {
     position: 'absolute',
