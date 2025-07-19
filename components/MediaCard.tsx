@@ -26,7 +26,7 @@ export function MediaCard({ item }: MediaCardProps) {
 
   const handlePress = async () => {
     await PlayerService.setCurrentMedia(item);
-    router.push('/(tabs)/player');
+    router.push('/player');
   };
 
   return (
