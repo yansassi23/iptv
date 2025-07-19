@@ -247,7 +247,6 @@ export class PlaylistService {
     ];
     
     return mainCategoryKeywords.some(keyword => 
-      const normalizedForceCategory = forceCategory.toLowerCase().trim();
       normalized === keyword || normalized.includes(keyword)
     );
   }
