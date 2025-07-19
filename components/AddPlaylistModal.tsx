@@ -45,10 +45,7 @@ export function AddPlaylistModal({ visible, onClose, onSuccess }: AddPlaylistMod
   };
 
   const handleSubmit = async () => {
-    if (!name.trim()) {
-      Alert.alert('Erro', 'Digite um nome para a playlist');
-      return;
-    }
+    const playlistName = name.trim() || `Playlist ${new Date().toLocaleDateString()}`;
 
     if (mode === 'url' && !url.trim()) {
       Alert.alert('Erro', 'Digite uma URL válida');
@@ -67,7 +64,7 @@ export function AddPlaylistModal({ visible, onClose, onSuccess }: AddPlaylistMod
 
     try {
       setLoading(true);
-      console.log('AddPlaylistModal: Enviando. Modo:', mode, 'Nome:', name, 'Tamanho da URL:', url.length, 'Tamanho do conteúdo:', content.length);
+      console.log('AddPlaylistModal: Enviando. Modo:', mode, 'Nome:', playlistName, 'Tamanho da URL:', url.length, 'Tamanho do conteúdo:', content.length);
       
       let playlistContent = content;
       
@@ -76,8 +73,8 @@ export function AddPlaylistModal({ visible, onClose, onSuccess }: AddPlaylistMod
         console.log('AddPlaylistModal: Conteúdo da playlist buscado (tamanho):', playlistContent.length);
       }
 
-      console.log('AddPlaylistModal: Chamando PlaylistService.addPlaylist com nome:', name, 'e tamanho do conteúdo:', playlistContent.length);
-      await PlaylistService.addPlaylist(name, playlistContent, mode === 'url' ? url : undefined);
+      console.log('AddPlaylistModal: Chamando PlaylistService.addPlaylist com nome:', playlistName, 'e tamanho do conteúdo:', playlistContent.length);
+      await PlaylistService.addPlaylist(playlistName, playlistContent, mode === 'url' ? url : undefined);
       
       Alert.alert('Sucesso', 'Playlist adicionada com sucesso!', [
         { text: 'OK', onPress: () => {
@@ -154,12 +151,12 @@ export function AddPlaylistModal({ visible, onClose, onSuccess }: AddPlaylistMod
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.field}>
-            <Text style={styles.label}>Nome da playlist</Text>
+            <Text style={styles.label}>Nome da playlist (opcional)</Text>
             <TextInput
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="Ex: Filmes HD, Canais de TV..."
+              placeholder="Ex: Minha Lista IPTV..."
               placeholderTextColor="#666"
               autoCapitalize="words"
             />
@@ -246,10 +243,10 @@ export function AddPlaylistModal({ visible, onClose, onSuccess }: AddPlaylistMod
             <Text style={styles.helpTitle}>Formatos suportados:</Text>
             <Text style={styles.helpText}>
               • Arquivos M3U e M3U8{'\n'}
-              • Importação de arquivos locais{'\n'}
-              • URLs de playlists IPTV{'\n'}
-              • Conteúdo com tags #EXTINF{'\n'}
-              • Organização automática por group-title
+              • Categorização automática em TV, Filmes e Séries{'\n'}
+              • Importação via URL, texto ou arquivo{'\n'}
+              • Reconhecimento inteligente de categorias{'\n'}
+              • Suporte completo a tags #EXTINF
             </Text>
           </View>
         </ScrollView>

@@ -41,11 +41,14 @@ export default function HomeScreen() {
   };
 
   const getCategoryIcon = (categoryName: string) => {
-    if (categoryName.toLowerCase().includes('filme')) {
+    if (categoryName === 'Filmes') {
       return <Film size={16} color="#FF6B35" />;
     }
-    if (categoryName.toLowerCase().includes('tv') || categoryName.toLowerCase().includes('canal')) {
+    if (categoryName === 'TV') {
       return <Tv size={16} color="#FF6B35" />;
+    }
+    if (categoryName === 'Séries') {
+      return <Monitor size={16} color="#FF6B35" />;
     }
     return <Monitor size={16} color="#FF6B35" />;
   };

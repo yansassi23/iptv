@@ -92,6 +92,36 @@ export class PlaylistService {
     }
   }
 
+  static normalizeGroupTitle(groupTitle: string): string {
+    if (!groupTitle) return 'Outros';
+    
+    const title = groupTitle.toLowerCase();
+    
+    // Categorias de Filmes
+    if (title.includes('filme') || title.includes('movie') || title.includes('cinema') || 
+        title.includes('film') || title.includes('hd movie') || title.includes('movies')) {
+      return 'Filmes';
+    }
+    
+    // Categorias de Séries
+    if (title.includes('série') || title.includes('series') || title.includes('seriado') || 
+        title.includes('temporada') || title.includes('season') || title.includes('episódio') ||
+        title.includes('episode') || title.includes('novela')) {
+      return 'Séries';
+    }
+    
+    // Categorias de TV
+    if (title.includes('tv') || title.includes('canal') || title.includes('channel') || 
+        title.includes('televisão') || title.includes('television') || title.includes('live') ||
+        title.includes('ao vivo') || title.includes('news') || title.includes('notícia') ||
+        title.includes('esporte') || title.includes('sport') || title.includes('música') ||
+        title.includes('music') || title.includes('infantil') || title.includes('kids')) {
+      return 'TV';
+    }
+    
+    return 'Outros';
+  }
+
   static parseM3U(content: string): MediaItem[] {
     const lines = content.split('\n').map(line => line.trim()).filter(line => line);
     console.log('PlaylistService.parseM3U: Contagem de linhas processadas:', lines.length);
@@ -163,7 +193,7 @@ export class PlaylistService {
             id: Math.random().toString(36).substr(2, 9),
             name: currentItem.name,
             url: line,
-            groupTitle: currentItem.groupTitle || 'Sem categoria',
+            groupTitle: this.normalizeGroupTitle(currentItem.groupTitle || ''),
             tvgId: currentItem.tvgId,
             tvgName: currentItem.tvgName,
             tvgLogo: currentItem.tvgLogo,
@@ -183,7 +213,7 @@ export class PlaylistService {
           id: Math.random().toString(36).substr(2, 9),
           name: currentItem.name,
           url: line,
-          groupTitle: currentItem.groupTitle || 'Sem categoria',
+          groupTitle: this.normalizeGroupTitle(currentItem.groupTitle || ''),
           tvgId: currentItem.tvgId,
           tvgName: currentItem.tvgName,
           tvgLogo: currentItem.tvgLogo,
