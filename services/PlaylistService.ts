@@ -139,10 +139,25 @@ export class PlaylistService {
         if (nameMatch) {
           currentItem.name = nameMatch[1].trim();
           console.log('PlaylistService.parseM3U: Nome extraído:', currentItem.name);
+        } else {
+          // Se não encontrou nome após vírgula, tenta usar tvg-name
+          if (currentItem.tvgName) {
+            currentItem.name = currentItem.tvgName;
+            console.log('PlaylistService.parseM3U: Nome extraído do tvg-name:', currentItem.name);
+          } else {
+            // Se não tem tvg-name, usa um nome genérico baseado no índice
+            currentItem.name = `Canal ${i + 1}`;
+            console.log('PlaylistService.parseM3U: Nome genérico atribuído:', currentItem.name);
+          }
         }
         
       } else if (line.startsWith('http://') || line.startsWith('https://')) {
         // This is a URL line
+        // Garante que sempre há um nome, mesmo que genérico
+        if (!currentItem.name) {
+          currentItem.name = currentItem.tvgName || `Canal ${items.length + 1}`;
+        }
+        
         if (currentItem.name) {
           const item: MediaItem = {
             id: Math.random().toString(36).substr(2, 9),
@@ -158,6 +173,25 @@ export class PlaylistService {
           console.log('PlaylistService.parseM3U: Adicionando item:', item.name);
           items.push(item);
         }
+        
+        // Reset for next item
+        currentItem = {};
+      } else if (line && !line.startsWith('#') && currentItem.name) {
+        // Linha que não é HTTP mas pode ser uma URL relativa ou outro formato
+        // Só adiciona se tiver um nome definido
+        const item: MediaItem = {
+          id: Math.random().toString(36).substr(2, 9),
+          name: currentItem.name,
+          url: line,
+          groupTitle: currentItem.groupTitle || 'Sem categoria',
+          tvgId: currentItem.tvgId,
+          tvgName: currentItem.tvgName,
+          tvgLogo: currentItem.tvgLogo,
+          duration: currentItem.duration,
+        };
+        
+        console.log('PlaylistService.parseM3U: Adicionando item (URL não-HTTP):', item.name);
+        items.push(item);
         
         // Reset for next item
         currentItem = {};
