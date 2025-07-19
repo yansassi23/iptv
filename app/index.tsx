@@ -142,6 +142,7 @@ export default function HomeScreen() {
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
         onSuccess={loadPlaylists}
+        defaultNamePrefix=""
       />
     </View>
   );

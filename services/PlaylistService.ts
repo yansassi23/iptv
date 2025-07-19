@@ -4,9 +4,9 @@ import { MediaItem, PlaylistCategory, PlaylistData } from '@/types/media';
 const STORAGE_KEY = 'playlists';
 
 export class PlaylistService {
-  static async addPlaylist(name: string, content: string, url?: string): Promise<void> {
+  static async addPlaylist(name: string, content: string, url?: string, forceCategory?: string): Promise<void> {
     try {
-      const items = this.parseM3U(content);
+      const items = this.parseM3U(content, forceCategory);
       console.log('PlaylistService.addPlaylist: Itens parseados do conteúdo:', items.length);
       
       if (items.length === 0) {
@@ -152,7 +152,7 @@ export class PlaylistService {
     return 'Outros';
   }
 
-  static parseM3U(content: string): MediaItem[] {
+  static parseM3U(content: string, forceCategory?: string): MediaItem[] {
     const lines = content.split('\n').map(line => line.trim()).filter(line => line);
     console.log('PlaylistService.parseM3U: Contagem de linhas processadas:', lines.length);
     console.log('PlaylistService.parseM3U: Primeiras 5 linhas:', lines.slice(0, 5));
@@ -223,7 +223,7 @@ export class PlaylistService {
             id: Math.random().toString(36).substr(2, 9),
             name: currentItem.name,
             url: line,
-            groupTitle: this.normalizeGroupTitle(currentItem.groupTitle || ''),
+            groupTitle: forceCategory || this.normalizeGroupTitle(currentItem.groupTitle || ''),
             tvgId: currentItem.tvgId,
             tvgName: currentItem.tvgName,
             tvgLogo: currentItem.tvgLogo,
@@ -243,7 +243,7 @@ export class PlaylistService {
           id: Math.random().toString(36).substr(2, 9),
           name: currentItem.name,
           url: line,
-          groupTitle: this.normalizeGroupTitle(currentItem.groupTitle || ''),
+          groupTitle: forceCategory || this.normalizeGroupTitle(currentItem.groupTitle || ''),
           tvgId: currentItem.tvgId,
           tvgName: currentItem.tvgName,
           tvgLogo: currentItem.tvgLogo,

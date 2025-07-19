@@ -21,9 +21,10 @@ interface AddPlaylistModalProps {
   onClose: () => void;
   onSuccess: () => void;
   defaultNamePrefix?: string;
+  forceCategory?: string;
 }
 
-export function AddPlaylistModal({ visible, onClose, onSuccess, defaultNamePrefix }: AddPlaylistModalProps) {
+export function AddPlaylistModal({ visible, onClose, onSuccess, defaultNamePrefix, forceCategory }: AddPlaylistModalProps) {
   const [name, setName] = useState(defaultNamePrefix || '');
   const [url, setUrl] = useState('');
   const [content, setContent] = useState('');
@@ -79,7 +80,7 @@ export function AddPlaylistModal({ visible, onClose, onSuccess, defaultNamePrefi
       }
 
       console.log('AddPlaylistModal: Chamando PlaylistService.addPlaylist com nome:', playlistName, 'e tamanho do conteúdo:', playlistContent.length);
-      await PlaylistService.addPlaylist(playlistName, playlistContent, mode === 'url' ? url : undefined);
+      await PlaylistService.addPlaylist(playlistName, playlistContent, mode === 'url' ? url : undefined, forceCategory);
       
       Alert.alert('Sucesso', 'Playlist adicionada com sucesso!', [
         { text: 'OK', onPress: () => {

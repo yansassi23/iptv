@@ -31,6 +31,7 @@ export default function SettingsScreen() {
   });
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [modalDefaultNamePrefix, setModalDefaultNamePrefix] = useState('');
+  const [modalForceCategory, setModalForceCategory] = useState<string | undefined>(undefined);
   const router = useRouter();
 
   useEffect(() => {
@@ -50,8 +51,9 @@ export default function SettingsScreen() {
     }
   };
 
-  const openAddModal = (categoryPrefix: string) => {
+  const openAddModal = (categoryPrefix: string, forceCategory?: string) => {
     setModalDefaultNamePrefix(categoryPrefix);
+    setModalForceCategory(forceCategory);
     setIsAddModalVisible(true);
   };
 
@@ -127,7 +129,7 @@ export default function SettingsScreen() {
           
           <TouchableOpacity
             style={styles.categoryAddButton}
-            onPress={() => openAddModal('Playlist de TV')}
+            onPress={() => openAddModal('Playlist de TV', 'TV')}
           >
             <Tv size={20} color="#4CAF50" />
             <Text style={[styles.actionText, { color: '#4CAF50' }]}>
@@ -138,7 +140,7 @@ export default function SettingsScreen() {
           
           <TouchableOpacity
             style={styles.categoryAddButton}
-            onPress={() => openAddModal('Playlist de Séries')}
+            onPress={() => openAddModal('Playlist de Séries', 'Séries')}
           >
             <Monitor size={20} color="#9C27B0" />
             <Text style={[styles.actionText, { color: '#9C27B0' }]}>
@@ -149,7 +151,7 @@ export default function SettingsScreen() {
           
           <TouchableOpacity
             style={styles.categoryAddButton}
-            onPress={() => openAddModal('Playlist de Filmes')}
+            onPress={() => openAddModal('Playlist de Filmes', 'Filmes')}
           >
             <Film size={20} color="#FF9800" />
             <Text style={[styles.actionText, { color: '#FF9800' }]}>
@@ -228,6 +230,7 @@ export default function SettingsScreen() {
           setIsAddModalVisible(false);
         }}
         defaultNamePrefix={modalDefaultNamePrefix}
+       forceCategory={modalForceCategory}
       />
     </View>
   );
