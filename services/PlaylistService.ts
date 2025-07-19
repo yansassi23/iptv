@@ -98,24 +98,54 @@ export class PlaylistService {
     const title = groupTitle.toLowerCase();
     
     // Categorias de Filmes
-    if (title.includes('filme') || title.includes('movie') || title.includes('cinema') || 
-        title.includes('film') || title.includes('hd movie') || title.includes('movies')) {
+    if (title.includes('filme') || title.includes('filmes') || title.includes('movie') || 
+        title.includes('movies') || title.includes('cinema') || title.includes('film') || 
+        title.includes('films') || title.includes('hd movie') || title.includes('longa') || 
+        title.includes('longas') || title.includes('longa-metragem') || title.includes('documentario') || 
+        title.includes('documentários') || title.includes('documentary') || title.includes('documentaries') ||
+        title.includes('acao') || title.includes('action') || title.includes('comedia') || 
+        title.includes('comedy') || title.includes('drama') || title.includes('terror') || 
+        title.includes('horror') || title.includes('suspense') || title.includes('thriller') ||
+        title.includes('animacao') || title.includes('animation') || title.includes('aventura') ||
+        title.includes('adventure') || title.includes('romance') || title.includes('ficcao') ||
+        title.includes('sci-fi') || title.includes('fantasy') || title.includes('fantasia')) {
       return 'Filmes';
     }
     
     // Categorias de Séries
     if (title.includes('série') || title.includes('series') || title.includes('seriado') || 
-        title.includes('temporada') || title.includes('season') || title.includes('episódio') ||
-        title.includes('episode') || title.includes('novela')) {
+        title.includes('seriados') || title.includes('temporada') || title.includes('season') || 
+        title.includes('episódio') || title.includes('episode') || title.includes('novela') ||
+        title.includes('novelas') || title.includes('tv show') || title.includes('tv shows') ||
+        title.includes('show') || title.includes('shows') || title.includes('miniserie') ||
+        title.includes('minisserie') || title.includes('sitcom') || title.includes('soap opera') ||
+        title.includes('telenovela') || title.includes('anime') || title.includes('animes') ||
+        title.includes('desenho') || title.includes('desenhos') || title.includes('cartoon') ||
+        title.includes('cartoons') || title.includes('reality') || title.includes('talk show')) {
       return 'Séries';
     }
     
     // Categorias de TV
-    if (title.includes('tv') || title.includes('canal') || title.includes('channel') || 
-        title.includes('televisão') || title.includes('television') || title.includes('live') ||
-        title.includes('ao vivo') || title.includes('news') || title.includes('notícia') ||
-        title.includes('esporte') || title.includes('sport') || title.includes('música') ||
-        title.includes('music') || title.includes('infantil') || title.includes('kids')) {
+    if (title.includes('tv') || title.includes('canal') || title.includes('canais') || 
+        title.includes('channel') || title.includes('channels') || title.includes('televisão') || 
+        title.includes('television') || title.includes('live') || title.includes('ao vivo') ||
+        title.includes('live tv') || title.includes('iptv') || title.includes('news') || 
+        title.includes('notícia') || title.includes('noticias') || title.includes('jornalismo') ||
+        title.includes('esporte') || title.includes('esportes') || title.includes('sport') || 
+        title.includes('sports') || title.includes('futebol') || title.includes('football') ||
+        title.includes('música') || title.includes('music') || title.includes('musical') ||
+        title.includes('infantil') || title.includes('infantis') || title.includes('kids') ||
+        title.includes('criança') || title.includes('criancas') || title.includes('children') ||
+        title.includes('religioso') || title.includes('religious') || title.includes('gospel') ||
+        title.includes('cultura') || title.includes('cultural') || title.includes('educativo') ||
+        title.includes('educational') || title.includes('documentario tv') || title.includes('variedades') ||
+        title.includes('variety') || title.includes('entretenimento') || title.includes('entertainment') ||
+        title.includes('culinaria') || title.includes('cooking') || title.includes('lifestyle') ||
+        title.includes('nacional') || title.includes('internacional') || title.includes('regional') ||
+        title.includes('local') || title.includes('aberto') || title.includes('fechado') ||
+        title.includes('premium') || title.includes('hd') || title.includes('4k') ||
+        title.includes('globo') || title.includes('sbt') || title.includes('record') ||
+        title.includes('band') || title.includes('rede tv') || title.includes('cultura')) {
       return 'TV';
     }
     
