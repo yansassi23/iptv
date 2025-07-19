@@ -53,6 +53,7 @@ export default function SettingsScreen() {
             try {
               await PlaylistService.clearAllData();
               setStorageInfo({ totalPlaylists: 0, totalItems: 0 });
+             loadStorageInfo(); // Recarrega as informações após limpar
               Alert.alert('Sucesso', 'Todos os dados foram removidos.');
             } catch (error) {
               Alert.alert('Erro', 'Não foi possível limpar os dados.');

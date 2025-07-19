@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { Plus, Tv, Film, Monitor } from 'lucide-react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { PlaylistService } from '@/services/PlaylistService';
 import { MediaItem, PlaylistCategory } from '@/types/media';
 import { MediaCard } from '@/components/MediaCard';
@@ -27,6 +28,13 @@ export default function HomeScreen() {
   useEffect(() => {
     loadPlaylists();
   }, []);
+
+  // Recarrega as playlists sempre que a tela ganhar foco
+  useFocusEffect(
+    React.useCallback(() => {
+      loadPlaylists();
+    }, [])
+  );
 
   const loadPlaylists = async () => {
     try {
