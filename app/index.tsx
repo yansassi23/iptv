@@ -20,6 +20,7 @@ const isTV = Platform.isTV || width > 1000;
 export default function HomeScreen() {
   const [categories, setCategories] = useState<PlaylistCategory[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<'TV' | 'Filmes' | 'Séries'>('TV');
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -62,6 +63,11 @@ export default function HomeScreen() {
     }
   };
 
+  const openAddModal = (category: 'TV' | 'Filmes' | 'Séries') => {
+    setSelectedCategory(category);
+    setIsModalVisible(true);
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -77,7 +83,7 @@ export default function HomeScreen() {
         <View style={styles.headerButtons}>
           <TouchableOpacity
             style={styles.addButton}
-            onPress={() => setIsModalVisible(true)}
+            onPress={() => openAddModal('TV')}
           >
             <Plus size={24} color="#FFF" />
           </TouchableOpacity>
@@ -97,13 +103,32 @@ export default function HomeScreen() {
           <Text style={styles.emptySubtitle}>
             Adicione uma playlist M3U para começar
           </Text>
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={() => setIsModalVisible(true)}
-          >
-            <Plus size={20} color="#FFF" />
-            <Text style={styles.buttonText}>Adicionar Playlist</Text>
-          </TouchableOpacity>
+          
+          <View style={styles.addButtonsContainer}>
+            <TouchableOpacity
+              style={[styles.categoryAddButton, styles.tvAddButton]}
+              onPress={() => openAddModal('TV')}
+            >
+              <Tv size={20} color="#FFF" />
+              <Text style={styles.addButtonText}>TV</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.categoryAddButton, styles.moviesAddButton]}
+              onPress={() => openAddModal('Filmes')}
+            >
+              <Film size={20} color="#FFF" />
+              <Text style={styles.addButtonText}>Filmes</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.categoryAddButton, styles.seriesAddButton]}
+              onPress={() => openAddModal('Séries')}
+            >
+              <Monitor size={20} color="#FFF" />
+              <Text style={styles.addButtonText}>Séries</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       ) : (
         <View style={styles.categoriesGrid}>
@@ -140,13 +165,31 @@ export default function HomeScreen() {
             <Text style={styles.categoryCount}>{getCategoryCount('Séries')} séries</Text>
           </TouchableOpacity>
         </View>
+        
+        <View style={styles.quickAddContainer}>
+          <Text style={styles.quickAddTitle}>Adicionar nova playlist:</Text>
+          <View style={styles.quickAddButtons}>
+            <TouchableOpacity style={[styles.quickAddButton, styles.tvQuickAdd]} onPress={() => openAddModal('TV')}>
+              <Tv size={16} color="#FFF" />
+              <Text style={styles.quickAddButtonText}>TV</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.quickAddButton, styles.moviesQuickAdd]} onPress={() => openAddModal('Filmes')}>
+              <Film size={16} color="#FFF" />
+              <Text style={styles.quickAddButtonText}>Filmes</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.quickAddButton, styles.seriesQuickAdd]} onPress={() => openAddModal('Séries')}>
+              <Monitor size={16} color="#FFF" />
+              <Text style={styles.quickAddButtonText}>Séries</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       )}
 
       <AddPlaylistModal
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
         onSuccess={loadPlaylists}
-        defaultNamePrefix=""
+        selectedCategory={selectedCategory}
       />
     </View>
   );
@@ -234,6 +277,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  addButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
+  },
+  categoryAddButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  tvAddButton: {
+    backgroundColor: '#4CAF50',
+  },
+  moviesAddButton: {
+    backgroundColor: '#FF9800',
+  },
+  seriesAddButton: {
+    backgroundColor: '#9C27B0',
+  },
+  addButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   categoriesGrid: {
     flex: 1,
     padding: 20,
@@ -269,5 +340,44 @@ const styles = StyleSheet.create({
   categoryCount: {
     fontSize: 16,
     color: '#888',
+  },
+  quickAddContainer: {
+    padding: 20,
+    backgroundColor: '#1F1F1F',
+    margin: 20,
+    borderRadius: 12,
+  },
+  quickAddTitle: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  quickAddButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  quickAddButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 6,
+    gap: 6,
+  },
+  tvQuickAdd: {
+    backgroundColor: '#4CAF50',
+  },
+  moviesQuickAdd: {
+    backgroundColor: '#FF9800',
+  },
+  seriesQuickAdd: {
+    backgroundColor: '#9C27B0',
+  },
+  quickAddButtonText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

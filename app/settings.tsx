@@ -30,8 +30,7 @@ export default function SettingsScreen() {
     totalItems: 0,
   });
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const [modalDefaultNamePrefix, setModalDefaultNamePrefix] = useState('');
-  const [modalForceCategory, setModalForceCategory] = useState<string | undefined>(undefined);
+  const [selectedCategory, setSelectedCategory] = useState<'TV' | 'Filmes' | 'Séries'>('TV');
   const router = useRouter();
 
   useEffect(() => {
@@ -51,9 +50,8 @@ export default function SettingsScreen() {
     }
   };
 
-  const openAddModal = (categoryPrefix: string, forceCategory?: string) => {
-    setModalDefaultNamePrefix(categoryPrefix);
-    setModalForceCategory(forceCategory);
+  const openAddModal = (category: 'TV' | 'Filmes' | 'Séries') => {
+    setSelectedCategory(category);
     setIsAddModalVisible(true);
   };
 
@@ -129,7 +127,7 @@ export default function SettingsScreen() {
           
           <TouchableOpacity
             style={styles.categoryAddButton}
-            onPress={() => openAddModal('Playlist de TV', 'TV')}
+            onPress={() => openAddModal('TV')}
           >
             <Tv size={20} color="#4CAF50" />
             <Text style={[styles.actionText, { color: '#4CAF50' }]}>
@@ -140,7 +138,7 @@ export default function SettingsScreen() {
           
           <TouchableOpacity
             style={styles.categoryAddButton}
-            onPress={() => openAddModal('Playlist de Séries', 'Séries')}
+            onPress={() => openAddModal('Séries')}
           >
             <Monitor size={20} color="#9C27B0" />
             <Text style={[styles.actionText, { color: '#9C27B0' }]}>
@@ -151,7 +149,7 @@ export default function SettingsScreen() {
           
           <TouchableOpacity
             style={styles.categoryAddButton}
-            onPress={() => openAddModal('Playlist de Filmes', 'Filmes')}
+            onPress={() => openAddModal('Filmes')}
           >
             <Film size={20} color="#FF9800" />
             <Text style={[styles.actionText, { color: '#FF9800' }]}>
@@ -229,8 +227,7 @@ export default function SettingsScreen() {
           loadStorageInfo();
           setIsAddModalVisible(false);
         }}
-        defaultNamePrefix={modalDefaultNamePrefix}
-       forceCategory={modalForceCategory}
+       selectedCategory={selectedCategory}
       />
     </View>
   );

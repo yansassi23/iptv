@@ -20,28 +20,32 @@ interface AddPlaylistModalProps {
   visible: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  defaultNamePrefix?: string;
-  forceCategory?: string;
+  selectedCategory?: 'TV' | 'Filmes' | 'Séries';
 }
 
-export function AddPlaylistModal({ visible, onClose, onSuccess, defaultNamePrefix, forceCategory }: AddPlaylistModalProps) {
-  const [name, setName] = useState(defaultNamePrefix || '');
+export function AddPlaylistModal({ visible, onClose, onSuccess, selectedCategory }: AddPlaylistModalProps) {
+  const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   const [content, setContent] = useState('');
   const [mode, setMode] = useState<'url' | 'text' | 'file'>('url');
   const [fileName, setFileName] = useState('');
+  const [category, setCategory] = useState<'TV' | 'Filmes' | 'Séries'>(selectedCategory || 'TV');
   const [loading, setLoading] = useState(false);
 
-  // Update name when defaultNamePrefix changes
+  // Update category when selectedCategory changes
   useEffect(() => {
-    setName(defaultNamePrefix || '');
-  }, [defaultNamePrefix]);
+    if (selectedCategory) {
+      setCategory(selectedCategory);
+    }
+  }, [selectedCategory]);
+
   const resetForm = () => {
-    setName(defaultNamePrefix || '');
+    setName('');
     setUrl('');
     setContent('');
     setFileName('');
     setMode('url');
+    setCategory(selectedCategory || 'TV');
     setLoading(false);
   };
 
@@ -51,7 +55,7 @@ export function AddPlaylistModal({ visible, onClose, onSuccess, defaultNamePrefi
   };
 
   const handleSubmit = async () => {
-    const playlistName = name.trim() || `Playlist ${new Date().toLocaleDateString()}`;
+    const playlistName = name.trim() || `Playlist de ${category} ${new Date().toLocaleDateString()}`;
 
     if (mode === 'url' && !url.trim()) {
       Alert.alert('Erro', 'Digite uma URL válida');
@@ -70,7 +74,7 @@ export function AddPlaylistModal({ visible, onClose, onSuccess, defaultNamePrefi
 
     try {
       setLoading(true);
-      console.log('AddPlaylistModal: Enviando. Modo:', mode, 'Nome:', playlistName, 'Tamanho da URL:', url.length, 'Tamanho do conteúdo:', content.length);
+      console.log('AddPlaylistModal: Enviando. Modo:', mode, 'Nome:', playlistName, 'Categoria:', category, 'Tamanho da URL:', url.length, 'Tamanho do conteúdo:', content.length);
       
       let playlistContent = content;
       
@@ -79,8 +83,8 @@ export function AddPlaylistModal({ visible, onClose, onSuccess, defaultNamePrefi
         console.log('AddPlaylistModal: Conteúdo da playlist buscado (tamanho):', playlistContent.length);
       }
 
-      console.log('AddPlaylistModal: Chamando PlaylistService.addPlaylist com nome:', playlistName, 'e tamanho do conteúdo:', playlistContent.length);
-      await PlaylistService.addPlaylist(playlistName, playlistContent, mode === 'url' ? url : undefined, forceCategory);
+      console.log('AddPlaylistModal: Chamando PlaylistService.addPlaylist com nome:', playlistName, 'categoria:', category, 'e tamanho do conteúdo:', playlistContent.length);
+      await PlaylistService.addPlaylist(playlistName, playlistContent, mode === 'url' ? url : undefined, category);
       
       Alert.alert('Sucesso', 'Playlist adicionada com sucesso!', [
         { text: 'OK', onPress: () => {
@@ -157,12 +161,44 @@ export function AddPlaylistModal({ visible, onClose, onSuccess, defaultNamePrefi
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.field}>
+            <Text style={styles.label}>Categoria</Text>
+            <View style={styles.categorySelector}>
+              <TouchableOpacity
+                style={[styles.categoryButton, category === 'TV' && styles.categoryButtonActive]}
+                onPress={() => setCategory('TV')}
+              >
+                <Text style={[styles.categoryText, category === 'TV' && styles.categoryTextActive]}>
+                  TV
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.categoryButton, category === 'Filmes' && styles.categoryButtonActive]}
+                onPress={() => setCategory('Filmes')}
+              >
+                <Text style={[styles.categoryText, category === 'Filmes' && styles.categoryTextActive]}>
+                  Filmes
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.categoryButton, category === 'Séries' && styles.categoryButtonActive]}
+                onPress={() => setCategory('Séries')}
+              >
+                <Text style={[styles.categoryText, category === 'Séries' && styles.categoryTextActive]}>
+                  Séries
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.field}>
             <Text style={styles.label}>Nome da playlist (opcional)</Text>
             <TextInput
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="Ex: Minha Lista IPTV..."
+              placeholder={`Ex: Minha Lista de ${category}...`}
               placeholderTextColor="#666"
               autoCapitalize="words"
             />
@@ -249,9 +285,8 @@ export function AddPlaylistModal({ visible, onClose, onSuccess, defaultNamePrefi
             <Text style={styles.helpTitle}>Formatos suportados:</Text>
             <Text style={styles.helpText}>
               • Arquivos M3U e M3U8{'\n'}
-              • Categorização automática em TV, Filmes e Séries{'\n'}
+              • Todos os itens serão categorizados como: {category}{'\n'}
               • Importação via URL, texto ou arquivo{'\n'}
-              • Reconhecimento inteligente de categorias{'\n'}
               • Suporte completo a tags #EXTINF
             </Text>
           </View>
@@ -351,6 +386,29 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   modeTextActive: {
+    color: '#FFF',
+  },
+  categorySelector: {
+    flexDirection: 'row',
+    backgroundColor: '#1F1F1F',
+    borderRadius: 8,
+    padding: 4,
+  },
+  categoryButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  categoryButtonActive: {
+    backgroundColor: '#FF6B35',
+  },
+  categoryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#888',
+  },
+  categoryTextActive: {
     color: '#FFF',
   },
   helpSection: {
