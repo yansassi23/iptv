@@ -144,7 +144,7 @@ export class PlaylistService {
     console.log('Input groupTitle (raw):', JSON.stringify(groupTitle));
     
     // More robust empty check
-    const trimmedGroupTitle = groupTitle ? groupTitle.trim() : '';
+    const trimmedGroupTitle = (groupTitle || '').trim();
     if (!trimmedGroupTitle) {
       const result = { main: 'Outros', sub: 'Geral' };
       console.log('Empty/null groupTitle - returning:', result);
@@ -155,16 +155,16 @@ export class PlaylistService {
     
     if (trimmedGroupTitle.includes('|')) {
       console.log('groupTitle contains | separator');
-      const parts = trimmedGroupTitle.split('|').map(part => part.trim());
+      const parts = trimmedGroupTitle.split('|');
       console.log('Split parts (raw):', parts.map(p => JSON.stringify(p)));
       
       if (parts.length >= 2) {
         // First part becomes main category (normalized)
-        const mainCategory = this.normalizeMainCategory(parts[0]);
+        const mainCategory = this.normalizeMainCategory(parts[0].trim());
         
         // Second part becomes subcategory - explicit handling of empty/whitespace
-        let subCategory = parts[1];
-        if (!subCategory || subCategory.trim() === '') {
+        let subCategory = parts[1].trim();
+        if (!subCategory) {
           subCategory = 'Geral';
         }
         
@@ -347,7 +347,11 @@ export class PlaylistService {
         }
         
         // Always use extracted subcategory with explicit fallback
-        currentItem.subCategory = (categories.sub && categories.sub.trim()) ? categories.sub : 'Geral';
+        let subCategory = categories.sub;
+        if (!subCategory || subCategory.trim() === '') {
+          subCategory = 'Geral';
+        }
+        currentItem.subCategory = subCategory;
         
         console.log('Categoria final determinada:', {
           mainCategory: currentItem.mainCategory,
@@ -377,6 +381,11 @@ export class PlaylistService {
         }
         
         if (currentItem.name) {
+          // Ensure subCategory is never empty
+          if (!currentItem.subCategory || currentItem.subCategory.trim() === '') {
+            currentItem.subCategory = 'Geral';
+          }
+          
           const item: MediaItem = {
             id: Math.random().toString(36).substr(2, 9),
             name: currentItem.name,
@@ -402,6 +411,12 @@ export class PlaylistService {
       } else if (line && !line.startsWith('#') && currentItem.name) {
         // Linha que não é HTTP mas pode ser uma URL relativa ou outro formato
         // Só adiciona se tiver um nome definido
+        
+        // Ensure subCategory is never empty
+        if (!currentItem.subCategory || currentItem.subCategory.trim() === '') {
+          currentItem.subCategory = 'Geral';
+        }
+        
         const item: MediaItem = {
           id: Math.random().toString(36).substr(2, 9),
           name: currentItem.name,
