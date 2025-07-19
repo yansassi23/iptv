@@ -37,12 +37,6 @@ export default function SeriesScreen() {
       if (seriesCategory) {
         const subCatArray = Object.values(seriesCategory.subcategories);
         setSubcategories(subCatArray);
-        
-        // Se há apenas uma subcategoria, seleciona automaticamente
-        if (subCatArray.length === 1) {
-          setSelectedSubcategory(subCatArray[0].name);
-          setSeriesItems(subCatArray[0].items);
-        }
       }
     } catch (error) {
       console.error('Erro ao carregar séries:', error);

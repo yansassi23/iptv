@@ -37,12 +37,6 @@ export default function MoviesScreen() {
       if (moviesCategory) {
         const subCatArray = Object.values(moviesCategory.subcategories);
         setSubcategories(subCatArray);
-        
-        // Se há apenas uma subcategoria, seleciona automaticamente
-        if (subCatArray.length === 1) {
-          setSelectedSubcategory(subCatArray[0].name);
-          setMovieItems(subCatArray[0].items);
-        }
       }
     } catch (error) {
       console.error('Erro ao carregar filmes:', error);
