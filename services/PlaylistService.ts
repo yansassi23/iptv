@@ -152,8 +152,7 @@ export class PlaylistService {
     // Clean and normalize the groupTitle
     const cleanGroupTitle = groupTitle.trim();
     
-    // Extract both main and sub from groupTitle
-    console.log('Processing groupTitle normally...');
+    console.log('Processing groupTitle:', cleanGroupTitle);
     
     if (cleanGroupTitle.includes('|')) {
       console.log('groupTitle contains | separator');
@@ -164,13 +163,8 @@ export class PlaylistService {
         // First part becomes main category (normalized)
         const mainCategory = this.normalizeMainCategory(parts[0]);
         
-        // Find a suitable subcategory from remaining parts
-        const potentialSub = parts.slice(1).find(part => 
-          part.toLowerCase() !== mainCategory.toLowerCase() &&
-          !this.isMainCategoryKeyword(part)
-        );
-        
-        const subCategory = potentialSub || parts[1]; // Fallback to second part
+        // Second part becomes subcategory
+        const subCategory = parts[1];
         
         const result = { main: mainCategory, sub: subCategory };
         console.log('Extracted from pipe-separated parts:', result);
@@ -178,11 +172,18 @@ export class PlaylistService {
       }
     }
     
-    // Single category - normalize as main category only
-    const mainCategory = this.normalizeMainCategory(cleanGroupTitle);
-    const result = { main: mainCategory };
-    console.log('Normalized as main category only:', result);
-    return result;
+    // Single category - check if it's a main category keyword
+    if (this.isMainCategoryKeyword(cleanGroupTitle)) {
+      const mainCategory = this.normalizeMainCategory(cleanGroupTitle);
+      const result = { main: mainCategory };
+      console.log('Recognized as main category:', result);
+      return result;
+    } else {
+      // Not a main category keyword, treat as subcategory
+      const result = { main: 'Outros', sub: cleanGroupTitle };
+      console.log('Treating as subcategory:', result);
+      return result;
+    }
   }
 
   static isMainCategoryKeyword(text: string): boolean {
@@ -301,16 +302,22 @@ export class PlaylistService {
         }
         
         // Extract categories from group-title
-        const categories = this.extractCategories(rawGroupTitle, forceCategory);
+        const categories = this.extractCategories(rawGroupTitle);
         
-        // If no group-title or categories.main is 'Outros', try to infer from name
-        if (!rawGroupTitle || categories.main === 'Outros') {
-          const inferredCategory = this.normalizeMainCategory(currentItem.name || '');
-          currentItem.mainCategory = inferredCategory !== 'Outros' ? inferredCategory : (forceCategory || 'Outros');
-        } else {
+        // Determine main category
+        if (forceCategory) {
+          // Use forced category as main category
+          currentItem.mainCategory = forceCategory;
+        } else if (categories.main !== 'Outros') {
+          // Use extracted main category
           currentItem.mainCategory = categories.main;
+        } else {
+          // Try to infer from name
+          const inferredCategory = this.normalizeMainCategory(currentItem.name || '');
+          currentItem.mainCategory = inferredCategory !== 'Outros' ? inferredCategory : 'Outros';
         }
         
+        // Always use extracted subcategory if available
         currentItem.subCategory = categories.sub;
         
         // Extract name (everything after the last comma)
