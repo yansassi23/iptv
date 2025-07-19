@@ -18,7 +18,9 @@ import {
   Film,
   Monitor,
   Plus,
+  ArrowLeft,
 } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { PlaylistService } from '@/services/PlaylistService';
 import { AddPlaylistModal } from '@/components/AddPlaylistModal';
 
@@ -29,6 +31,7 @@ export default function SettingsScreen() {
   });
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [modalDefaultNamePrefix, setModalDefaultNamePrefix] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
     loadStorageInfo();
@@ -51,6 +54,7 @@ export default function SettingsScreen() {
     setModalDefaultNamePrefix(categoryPrefix);
     setIsAddModalVisible(true);
   };
+
   const clearAllData = () => {
     Alert.alert(
       'Limpar todos os dados',
@@ -64,7 +68,7 @@ export default function SettingsScreen() {
             try {
               await PlaylistService.clearAllData();
               setStorageInfo({ totalPlaylists: 0, totalItems: 0 });
-             loadStorageInfo(); // Recarrega as informações após limpar
+              loadStorageInfo();
               Alert.alert('Sucesso', 'Todos os dados foram removidos.');
             } catch (error) {
               Alert.alert('Erro', 'Não foi possível limpar os dados.');
@@ -90,7 +94,11 @@ export default function SettingsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <ArrowLeft size={24} color="#FFF" />
+        </TouchableOpacity>
         <Text style={styles.title}>Configurações</Text>
+        <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -150,6 +158,7 @@ export default function SettingsScreen() {
             <Plus size={16} color="#FF9800" />
           </TouchableOpacity>
         </View>
+
         {/* Ações */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ações</Text>
@@ -230,15 +239,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 20,
     backgroundColor: '#1F1F1F',
   },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#FFF',
+  },
+  placeholder: {
+    width: 44,
   },
   content: {
     flex: 1,

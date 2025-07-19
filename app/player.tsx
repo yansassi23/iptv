@@ -87,6 +87,7 @@ export default function PlayerScreen() {
       console.error('Erro ao entrar em tela cheia:', error);
     }
   };
+
   const skipBackward = async () => {
     if (!videoRef.current) return;
     
