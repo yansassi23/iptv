@@ -111,8 +111,18 @@ export function AddPlaylistModal({ visible, onClose, onSuccess }: AddPlaylistMod
           return;
         }
 
-        // Ler o conteúdo do arquivo
-        const fileContent = await FileSystem.readAsStringAsync(file.uri);
+        // Ler o conteúdo do arquivo com base na plataforma
+        let fileContent: string;
+        
+        if (Platform.OS === 'web') {
+          // Para web, usar FileReader API
+          const response = await fetch(file.uri);
+          fileContent = await response.text();
+        } else {
+          // Para iOS/Android, usar expo-file-system
+          fileContent = await FileSystem.readAsStringAsync(file.uri);
+        }
+        
         console.log('Conteúdo do arquivo lido (tamanho):', fileContent.length);
         
         setContent(fileContent);
