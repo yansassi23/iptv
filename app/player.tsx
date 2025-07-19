@@ -8,7 +8,7 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
+import { Video, ResizeMode, Audio } from 'expo-av';
 import {
   Play,
   Pause,
@@ -37,11 +37,29 @@ export default function PlayerScreen() {
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
+    // Configure audio session
+    configureAudio();
     loadCurrentMedia();
     
     const subscription = PlayerService.onMediaChange(loadCurrentMedia);
     return () => subscription();
   }, []);
+
+  const configureAudio = async () => {
+    try {
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        staysActiveInBackground: false,
+        interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+        playThroughEarpieceAndroid: false,
+      });
+    } catch (error) {
+      console.error('Erro ao configurar áudio:', error);
+    }
+  };
 
   const loadCurrentMedia = async () => {
     const media = await PlayerService.getCurrentMedia();
@@ -177,6 +195,8 @@ export default function PlayerScreen() {
           isLooping={false}
           onPlaybackStatusUpdate={onPlaybackStatusUpdate}
           shouldPlay={true}
+          isMuted={isMuted}
+          volume={isMuted ? 0.0 : 1.0}
         />
         
         {isLoading && (
