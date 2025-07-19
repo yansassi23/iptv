@@ -141,46 +141,49 @@ export class PlaylistService {
 
   static extractCategories(groupTitle: string, forceCategory?: string): { main: string; sub?: string } {
     console.log('=== extractCategories DEBUG ===');
-    console.log('Input groupTitle:', JSON.stringify(groupTitle));
+    console.log('Input groupTitle (raw):', JSON.stringify(groupTitle));
     
-    if (!groupTitle || !groupTitle.trim()) {
+    // More robust empty check
+    const trimmedGroupTitle = groupTitle ? groupTitle.trim() : '';
+    if (!trimmedGroupTitle) {
       const result = { main: 'Outros', sub: 'Geral' };
-      console.log('No groupTitle - returning:', result);
+      console.log('Empty/null groupTitle - returning:', result);
       return result;
     }
     
-    // Clean and normalize the groupTitle
-    const cleanGroupTitle = groupTitle.trim();
+    console.log('Processing groupTitle (trimmed):', JSON.stringify(trimmedGroupTitle));
     
-    console.log('Processing groupTitle:', cleanGroupTitle);
-    
-    if (cleanGroupTitle.includes('|')) {
+    if (trimmedGroupTitle.includes('|')) {
       console.log('groupTitle contains | separator');
-      const parts = cleanGroupTitle.split('|').map(part => part.trim());
-      console.log('Split parts:', parts);
+      const parts = trimmedGroupTitle.split('|').map(part => part.trim());
+      console.log('Split parts (raw):', parts.map(p => JSON.stringify(p)));
       
       if (parts.length >= 2) {
         // First part becomes main category (normalized)
         const mainCategory = this.normalizeMainCategory(parts[0]);
         
-        // Second part becomes subcategory (use 'Geral' if empty)
-        const subCategory = parts[1] || 'Geral';
+        // Second part becomes subcategory - explicit handling of empty/whitespace
+        let subCategory = parts[1];
+        if (!subCategory || subCategory.trim() === '') {
+          subCategory = 'Geral';
+        }
         
         const result = { main: mainCategory, sub: subCategory };
-        console.log('Extracted from pipe-separated parts:', result);
+        console.log('Extracted from pipe-separated parts - mainCategory:', JSON.stringify(mainCategory), 'subCategory:', JSON.stringify(subCategory));
+        console.log('Final result:', result);
         return result;
       }
     }
     
     // Single category - check if it's a main category keyword
-    if (this.isMainCategoryKeyword(cleanGroupTitle)) {
-      const mainCategory = this.normalizeMainCategory(cleanGroupTitle);
+    if (this.isMainCategoryKeyword(trimmedGroupTitle)) {
+      const mainCategory = this.normalizeMainCategory(trimmedGroupTitle);
       const result = { main: mainCategory, sub: 'Geral' };
       console.log('Recognized as main category:', result);
       return result;
     } else {
       // Not a main category keyword, treat as subcategory
-      const result = { main: 'Outros', sub: cleanGroupTitle };
+      const result = { main: 'Outros', sub: trimmedGroupTitle };
       console.log('Treating as subcategory:', result);
       return result;
     }
@@ -324,11 +327,11 @@ export class PlaylistService {
         
         console.log('=== EXTINF PARSING DEBUG ===');
         console.log('Linha EXTINF completa:', line);
-        console.log('rawGroupTitle extraído:', JSON.stringify(rawGroupTitle));
+        console.log('rawGroupTitle extraído (raw):', JSON.stringify(rawGroupTitle));
         
         // Extract categories from group-title
         const categories = this.extractCategories(rawGroupTitle);
-        console.log('Categorias extraídas:', categories);
+        console.log('Categorias extraídas - main:', JSON.stringify(categories.main), 'sub:', JSON.stringify(categories.sub));
         
         // Determine main category
         if (forceCategory) {
@@ -343,8 +346,8 @@ export class PlaylistService {
           currentItem.mainCategory = inferredCategory !== 'Outros' ? inferredCategory : 'Outros';
         }
         
-        // Always use extracted subcategory if available
-        currentItem.subCategory = categories.sub || 'Geral';
+        // Always use extracted subcategory with explicit fallback
+        currentItem.subCategory = (categories.sub && categories.sub.trim()) ? categories.sub : 'Geral';
         
         console.log('Categoria final determinada:', {
           mainCategory: currentItem.mainCategory,
