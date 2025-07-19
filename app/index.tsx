@@ -131,7 +131,8 @@ export default function HomeScreen() {
           </View>
         </View>
       ) : (
-        <View style={styles.categoriesGrid}>
+        <>
+          <View style={styles.categoriesGrid}>
           <TouchableOpacity
             style={[styles.categoryCard, styles.tvCard]}
             onPress={() => navigateToCategory('TV')}
@@ -183,6 +184,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
+        </>
       )}
 
       <AddPlaylistModal
