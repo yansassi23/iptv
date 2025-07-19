@@ -53,7 +53,7 @@ export function MediaCard({ item }: MediaCardProps) {
           {item.name}
         </Text>
         <Text style={styles.category} numberOfLines={1}>
-          {item.groupTitle}
+          {item.subCategory || item.mainCategory}
         </Text>
       </View>
     </TouchableOpacity>

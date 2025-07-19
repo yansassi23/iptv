@@ -8,30 +8,42 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Folder } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { PlaylistService } from '@/services/PlaylistService';
-import { MediaItem } from '@/types/media';
+import { MediaItem, SubcategoryData } from '@/types/media';
 import { MediaCard } from '@/components/MediaCard';
 
 const { width } = Dimensions.get('window');
 const isTV = Platform.isTV || width > 1000;
 
 export default function TVScreen() {
+  const [subcategories, setSubcategories] = useState<SubcategoryData[]>([]);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [tvItems, setTvItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    loadTVItems();
+    loadTVData();
   }, []);
 
-  const loadTVItems = async () => {
+  const loadTVData = async () => {
     try {
       setLoading(true);
       const categories = await PlaylistService.getAllCategories();
       const tvCategory = categories.find(cat => cat.name === 'TV');
-      setTvItems(tvCategory ? tvCategory.items : []);
+      
+      if (tvCategory) {
+        const subCatArray = Object.values(tvCategory.subcategories);
+        setSubcategories(subCatArray);
+        
+        // Se há apenas uma subcategoria, seleciona automaticamente
+        if (subCatArray.length === 1) {
+          setSelectedSubcategory(subCatArray[0].name);
+          setTvItems(subCatArray[0].items);
+        }
+      }
     } catch (error) {
       console.error('Erro ao carregar canais de TV:', error);
     } finally {
@@ -39,8 +51,38 @@ export default function TVScreen() {
     }
   };
 
+  const selectSubcategory = (subcategoryName: string) => {
+    const subcategory = subcategories.find(sub => sub.name === subcategoryName);
+    if (subcategory) {
+      setSelectedSubcategory(subcategoryName);
+      setTvItems(subcategory.items);
+    }
+  };
+
+  const goBack = () => {
+    if (selectedSubcategory) {
+      setSelectedSubcategory(null);
+      setTvItems([]);
+    } else {
+      router.back();
+    }
+  };
+
   const renderMediaItem = ({ item }: { item: MediaItem }) => (
     <MediaCard item={item} />
+  );
+
+  const renderSubcategoryItem = ({ item }: { item: SubcategoryData }) => (
+    <TouchableOpacity
+      style={styles.subcategoryCard}
+      onPress={() => selectSubcategory(item.name)}
+    >
+      <View style={styles.subcategoryIcon}>
+        <Folder size={32} color="#4CAF50" />
+      </View>
+      <Text style={styles.subcategoryTitle}>{item.name}</Text>
+      <Text style={styles.subcategoryCount}>{item.count} canais</Text>
+    </TouchableOpacity>
   );
 
   if (loading) {
@@ -54,26 +96,46 @@ export default function TVScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backButton} onPress={goBack}>
           <ArrowLeft size={24} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.title}>TV</Text>
+        <Text style={styles.title}>
+          {selectedSubcategory ? selectedSubcategory : 'TV'}
+        </Text>
         <View style={styles.placeholder} />
       </View>
 
-      <FlatList
-        data={tvItems}
-        renderItem={renderMediaItem}
-        keyExtractor={(item) => item.id}
-        numColumns={isTV ? 4 : 2}
-        contentContainerStyle={styles.mediaGrid}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Nenhum canal de TV encontrado</Text>
-          </View>
-        }
-      />
+      {!selectedSubcategory ? (
+        // Mostrar lista de subcategorias
+        <FlatList
+          data={subcategories}
+          renderItem={renderSubcategoryItem}
+          keyExtractor={(item) => item.name}
+          numColumns={isTV ? 3 : 2}
+          contentContainerStyle={styles.subcategoriesGrid}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Nenhuma categoria de TV encontrada</Text>
+            </View>
+          }
+        />
+      ) : (
+        // Mostrar itens da subcategoria selecionada
+        <FlatList
+          data={tvItems}
+          renderItem={renderMediaItem}
+          keyExtractor={(item) => item.id}
+          numColumns={isTV ? 4 : 2}
+          contentContainerStyle={styles.mediaGrid}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Nenhum canal encontrado nesta categoria</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
@@ -117,6 +179,35 @@ const styles = StyleSheet.create({
   loadingText: {
     color: '#FFF',
     fontSize: 18,
+  },
+  subcategoriesGrid: {
+    padding: 20,
+    gap: 16,
+  },
+  subcategoryCard: {
+    backgroundColor: '#1F1F1F',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 8,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+  },
+  subcategoryIcon: {
+    marginBottom: 12,
+  },
+  subcategoryTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  subcategoryCount: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
   },
   mediaGrid: {
     padding: 20,

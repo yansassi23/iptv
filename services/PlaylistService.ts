@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MediaItem, PlaylistCategory, PlaylistData } from '@/types/media';
+import { MediaItem, PlaylistCategory, PlaylistData, SubcategoryData } from '@/types/media';
 
 const STORAGE_KEY = 'playlists';
 
@@ -17,7 +17,8 @@ export class PlaylistService {
       items.slice(0, 3).forEach((item, index) => {
         console.log(`PlaylistService.addPlaylist: Item ${index + 1}:`, {
           name: item.name,
-          groupTitle: item.groupTitle,
+          mainCategory: item.mainCategory,
+          subCategory: item.subCategory,
           url: item.url.substring(0, 50) + '...'
         });
       });
@@ -67,8 +68,8 @@ export class PlaylistService {
       const categoriesMap = new Map<string, MediaItem[]>();
       
       allItems.forEach(item => {
-        const category = item.groupTitle || 'Sem categoria';
-        console.log('PlaylistService.getAllCategories: Processando item:', item.name, 'categoria:', category);
+        const category = item.mainCategory || 'Sem categoria';
+        console.log('PlaylistService.getAllCategories: Processando item:', item.name, 'categoria principal:', category, 'subcategoria:', item.subCategory);
         if (!categoriesMap.has(category)) {
           categoriesMap.set(category, []);
         }
@@ -80,10 +81,32 @@ export class PlaylistService {
       const categories: PlaylistCategory[] = [];
       categoriesMap.forEach((items, name) => {
         console.log(`PlaylistService.getAllCategories: Categoria "${name}" com ${items.length} itens`);
+        
+        // Agrupar itens por subcategoria
+        const subcategoriesMap = new Map<string, MediaItem[]>();
+        items.forEach(item => {
+          const subCat = item.subCategory || 'Geral';
+          if (!subcategoriesMap.has(subCat)) {
+            subcategoriesMap.set(subCat, []);
+          }
+          subcategoriesMap.get(subCat)!.push(item);
+        });
+
+        // Criar objeto de subcategorias
+        const subcategories: { [key: string]: SubcategoryData } = {};
+        subcategoriesMap.forEach((subItems, subName) => {
+          subcategories[subName] = {
+            name: subName,
+            count: subItems.length,
+            items: subItems.sort((a, b) => a.name.localeCompare(b.name)),
+          };
+        });
+
         categories.push({
           name,
           count: items.length,
           items: items.sort((a, b) => a.name.localeCompare(b.name)),
+          subcategories,
         });
       });
 
@@ -116,26 +139,59 @@ export class PlaylistService {
     }
   }
 
-  static normalizeGroupTitle(groupTitle: string): string {
-    if (!groupTitle) return 'Outros';
+  static extractCategories(groupTitle: string, forceCategory?: string): { main: string; sub?: string } {
+    if (!groupTitle) {
+      return { main: forceCategory || 'Outros' };
+    }
     
-    console.log('PlaylistService.normalizeGroupTitle: Normalizando:', groupTitle);
+    console.log('PlaylistService.extractCategories: Extraindo categorias de:', groupTitle);
     
-    const title = groupTitle.toLowerCase();
+    // Se há uma categoria forçada, usa ela como principal
+    if (forceCategory) {
+      // Verifica se há subcategoria no groupTitle
+      if (groupTitle.includes('|')) {
+        const parts = groupTitle.split('|').map(part => part.trim());
+        // Se a primeira parte corresponde à categoria forçada, usa a segunda como subcategoria
+        if (parts.length >= 2 && parts[0].toLowerCase() === forceCategory.toLowerCase()) {
+          return { main: forceCategory, sub: parts[1] };
+        }
+        // Se não corresponde, usa a segunda parte como subcategoria mesmo assim
+        if (parts.length >= 2) {
+          return { main: forceCategory, sub: parts[1] };
+        }
+      }
+      // Se não há separador |, tenta extrair subcategoria do próprio groupTitle
+      return { main: forceCategory, sub: groupTitle };
+    }
+    
+    // Se há separador |, divide em categoria principal e subcategoria
+    if (groupTitle.includes('|')) {
+      const parts = groupTitle.split('|').map(part => part.trim());
+      if (parts.length >= 2) {
+        const mainCategory = this.normalizeMainCategory(parts[0]);
+        return { main: mainCategory, sub: parts[1] };
+      }
+    }
+    
+    // Se não há separador, normaliza como categoria principal
+    const mainCategory = this.normalizeMainCategory(groupTitle);
+    return { main: mainCategory };
+  }
+
+  static normalizeMainCategory(category: string): string {
+    if (!category) return 'Outros';
+    
+    console.log('PlaylistService.normalizeMainCategory: Normalizando:', category);
+    
+    const title = category.toLowerCase();
     
     // Categorias de Filmes
     if (title.includes('filme') || title.includes('filmes') || title.includes('movie') || 
         title.includes('movies') || title.includes('cinema') || title.includes('film') || 
         title.includes('films') || title.includes('hd movie') || title.includes('longa') || 
         title.includes('longas') || title.includes('longa-metragem') || title.includes('documentario') || 
-        title.includes('documentários') || title.includes('documentary') || title.includes('documentaries') ||
-        title.includes('acao') || title.includes('action') || title.includes('comedia') || 
-        title.includes('comedy') || title.includes('drama') || title.includes('terror') || 
-        title.includes('horror') || title.includes('suspense') || title.includes('thriller') ||
-        title.includes('animacao') || title.includes('animation') || title.includes('aventura') ||
-        title.includes('adventure') || title.includes('romance') || title.includes('ficcao') ||
-        title.includes('sci-fi') || title.includes('fantasy') || title.includes('fantasia')) {
-      console.log('PlaylistService.normalizeGroupTitle: Categorizado como Filmes');
+        title.includes('documentários') || title.includes('documentary') || title.includes('documentaries')) {
+      console.log('PlaylistService.normalizeMainCategory: Categorizado como Filmes');
       return 'Filmes';
     }
     
@@ -149,7 +205,7 @@ export class PlaylistService {
         title.includes('telenovela') || title.includes('anime') || title.includes('animes') ||
         title.includes('desenho') || title.includes('desenhos') || title.includes('cartoon') ||
         title.includes('cartoons') || title.includes('reality') || title.includes('talk show')) {
-      console.log('PlaylistService.normalizeGroupTitle: Categorizado como Séries');
+      console.log('PlaylistService.normalizeMainCategory: Categorizado como Séries');
       return 'Séries';
     }
     
@@ -166,19 +222,17 @@ export class PlaylistService {
         title.includes('criança') || title.includes('criancas') || title.includes('children') ||
         title.includes('religioso') || title.includes('religious') || title.includes('gospel') ||
         title.includes('cultura') || title.includes('cultural') || title.includes('educativo') ||
-        title.includes('educational') || title.includes('documentario tv') || title.includes('variedades') ||
+        title.includes('educational') || title.includes('variedades') ||
         title.includes('variety') || title.includes('entretenimento') || title.includes('entertainment') ||
         title.includes('culinaria') || title.includes('cooking') || title.includes('lifestyle') ||
         title.includes('nacional') || title.includes('internacional') || title.includes('regional') ||
         title.includes('local') || title.includes('aberto') || title.includes('fechado') ||
-        title.includes('premium') || title.includes('hd') || title.includes('4k') ||
-        title.includes('globo') || title.includes('sbt') || title.includes('record') ||
-        title.includes('band') || title.includes('rede tv') || title.includes('cultura')) {
-      console.log('PlaylistService.normalizeGroupTitle: Categorizado como TV');
+        title.includes('premium') || title.includes('hd') || title.includes('4k')) {
+      console.log('PlaylistService.normalizeMainCategory: Categorizado como TV');
       return 'TV';
     }
     
-    console.log('PlaylistService.normalizeGroupTitle: Categorizado como Outros');
+    console.log('PlaylistService.normalizeMainCategory: Categorizado como Outros');
     return 'Outros';
   }
 
@@ -206,6 +260,7 @@ export class PlaylistService {
         // Extract attributes
         const attributeRegex = /(\w+)="([^"]+)"/g;
         let match;
+        let rawGroupTitle = '';
         while ((match = attributeRegex.exec(extinf)) !== null) {
           const [, key, value] = match;
           switch (key) {
@@ -219,10 +274,15 @@ export class PlaylistService {
               currentItem.tvgLogo = value;
               break;
             case 'group-title':
-              currentItem.groupTitle = value;
+              rawGroupTitle = value;
               break;
           }
         }
+        
+        // Extract categories from group-title
+        const categories = this.extractCategories(rawGroupTitle, forceCategory);
+        currentItem.mainCategory = categories.main;
+        currentItem.subCategory = categories.sub;
         
         // Extract name (everything after the last comma)
         const nameMatch = extinf.match(/,(.+)$/);
@@ -250,7 +310,8 @@ export class PlaylistService {
             id: Math.random().toString(36).substr(2, 9),
             name: currentItem.name,
             url: line,
-            groupTitle: forceCategory || this.normalizeGroupTitle(currentItem.groupTitle || ''),
+            mainCategory: currentItem.mainCategory || forceCategory || 'Outros',
+            subCategory: currentItem.subCategory,
             tvgId: currentItem.tvgId,
             tvgName: currentItem.tvgName,
             tvgLogo: currentItem.tvgLogo,
@@ -259,8 +320,8 @@ export class PlaylistService {
           
           console.log('PlaylistService.parseM3U: Adicionando item:', {
             name: item.name,
-            groupTitle: item.groupTitle,
-            originalGroupTitle: currentItem.groupTitle
+            mainCategory: item.mainCategory,
+            subCategory: item.subCategory
           });
           items.push(item);
         }
@@ -274,7 +335,8 @@ export class PlaylistService {
           id: Math.random().toString(36).substr(2, 9),
           name: currentItem.name,
           url: line,
-          groupTitle: forceCategory || this.normalizeGroupTitle(currentItem.groupTitle || ''),
+          mainCategory: currentItem.mainCategory || forceCategory || 'Outros',
+          subCategory: currentItem.subCategory,
           tvgId: currentItem.tvgId,
           tvgName: currentItem.tvgName,
           tvgLogo: currentItem.tvgLogo,
@@ -283,8 +345,8 @@ export class PlaylistService {
         
         console.log('PlaylistService.parseM3U: Adicionando item (URL não-HTTP):', {
           name: item.name,
-          groupTitle: item.groupTitle,
-          originalGroupTitle: currentItem.groupTitle
+          mainCategory: item.mainCategory,
+          subCategory: item.subCategory
         });
         items.push(item);
         

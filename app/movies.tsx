@@ -8,30 +8,42 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Folder } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { PlaylistService } from '@/services/PlaylistService';
-import { MediaItem } from '@/types/media';
+import { MediaItem, SubcategoryData } from '@/types/media';
 import { MediaCard } from '@/components/MediaCard';
 
 const { width } = Dimensions.get('window');
 const isTV = Platform.isTV || width > 1000;
 
 export default function MoviesScreen() {
+  const [subcategories, setSubcategories] = useState<SubcategoryData[]>([]);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [movieItems, setMovieItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    loadMovieItems();
+    loadMoviesData();
   }, []);
 
-  const loadMovieItems = async () => {
+  const loadMoviesData = async () => {
     try {
       setLoading(true);
       const categories = await PlaylistService.getAllCategories();
-      const movieCategory = categories.find(cat => cat.name === 'Filmes');
-      setMovieItems(movieCategory ? movieCategory.items : []);
+      const moviesCategory = categories.find(cat => cat.name === 'Filmes');
+      
+      if (moviesCategory) {
+        const subCatArray = Object.values(moviesCategory.subcategories);
+        setSubcategories(subCatArray);
+        
+        // Se há apenas uma subcategoria, seleciona automaticamente
+        if (subCatArray.length === 1) {
+          setSelectedSubcategory(subCatArray[0].name);
+          setMovieItems(subCatArray[0].items);
+        }
+      }
     } catch (error) {
       console.error('Erro ao carregar filmes:', error);
     } finally {
@@ -39,8 +51,38 @@ export default function MoviesScreen() {
     }
   };
 
+  const selectSubcategory = (subcategoryName: string) => {
+    const subcategory = subcategories.find(sub => sub.name === subcategoryName);
+    if (subcategory) {
+      setSelectedSubcategory(subcategoryName);
+      setMovieItems(subcategory.items);
+    }
+  };
+
+  const goBack = () => {
+    if (selectedSubcategory) {
+      setSelectedSubcategory(null);
+      setMovieItems([]);
+    } else {
+      router.back();
+    }
+  };
+
   const renderMediaItem = ({ item }: { item: MediaItem }) => (
     <MediaCard item={item} />
+  );
+
+  const renderSubcategoryItem = ({ item }: { item: SubcategoryData }) => (
+    <TouchableOpacity
+      style={styles.subcategoryCard}
+      onPress={() => selectSubcategory(item.name)}
+    >
+      <View style={styles.subcategoryIcon}>
+        <Folder size={32} color="#FF9800" />
+      </View>
+      <Text style={styles.subcategoryTitle}>{item.name}</Text>
+      <Text style={styles.subcategoryCount}>{item.count} filmes</Text>
+    </TouchableOpacity>
   );
 
   if (loading) {
@@ -54,26 +96,46 @@ export default function MoviesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backButton} onPress={goBack}>
           <ArrowLeft size={24} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.title}>Filmes</Text>
+        <Text style={styles.title}>
+          {selectedSubcategory ? selectedSubcategory : 'Filmes'}
+        </Text>
         <View style={styles.placeholder} />
       </View>
 
-      <FlatList
-        data={movieItems}
-        renderItem={renderMediaItem}
-        keyExtractor={(item) => item.id}
-        numColumns={isTV ? 4 : 2}
-        contentContainerStyle={styles.mediaGrid}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Nenhum filme encontrado</Text>
-          </View>
-        }
-      />
+      {!selectedSubcategory ? (
+        // Mostrar lista de subcategorias
+        <FlatList
+          data={subcategories}
+          renderItem={renderSubcategoryItem}
+          keyExtractor={(item) => item.name}
+          numColumns={isTV ? 3 : 2}
+          contentContainerStyle={styles.subcategoriesGrid}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Nenhuma categoria de filmes encontrada</Text>
+            </View>
+          }
+        />
+      ) : (
+        // Mostrar itens da subcategoria selecionada
+        <FlatList
+          data={movieItems}
+          renderItem={renderMediaItem}
+          keyExtractor={(item) => item.id}
+          numColumns={isTV ? 4 : 2}
+          contentContainerStyle={styles.mediaGrid}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Nenhum filme encontrado nesta categoria</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
@@ -117,6 +179,35 @@ const styles = StyleSheet.create({
   loadingText: {
     color: '#FFF',
     fontSize: 18,
+  },
+  subcategoriesGrid: {
+    padding: 20,
+    gap: 16,
+  },
+  subcategoryCard: {
+    backgroundColor: '#1F1F1F',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 8,
+    borderWidth: 2,
+    borderColor: '#FF9800',
+  },
+  subcategoryIcon: {
+    marginBottom: 12,
+  },
+  subcategoryTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  subcategoryCount: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
   },
   mediaGrid: {
     padding: 20,

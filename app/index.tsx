@@ -45,7 +45,7 @@ export default function HomeScreen() {
 
   const getCategoryCount = (categoryName: string) => {
     const category = categories.find(cat => cat.name === categoryName);
-    console.log(`HomeScreen: Buscando categoria "${categoryName}", encontrada:`, category ? `${category.count} itens` : 'não encontrada');
+    console.log(`HomeScreen: Buscando categoria "${categoryName}", encontrada:`, category ? `${category.count} itens, ${Object.keys(category.subcategories).length} subcategorias` : 'não encontrada');
     return category ? category.count : 0;
   };
 
