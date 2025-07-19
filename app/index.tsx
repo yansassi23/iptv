@@ -29,18 +29,22 @@ export default function HomeScreen() {
 
   const loadPlaylists = async () => {
     try {
+      console.log('HomeScreen: Iniciando carregamento de playlists');
       setLoading(true);
       const data = await PlaylistService.getAllCategories();
+      console.log('HomeScreen: Categorias recebidas:', data.map(cat => `${cat.name} (${cat.count})`));
       setCategories(data);
     } catch (error) {
       console.error('Erro ao carregar playlists:', error);
     } finally {
       setLoading(false);
+      console.log('HomeScreen: Carregamento finalizado');
     }
   };
 
   const getCategoryCount = (categoryName: string) => {
     const category = categories.find(cat => cat.name === categoryName);
+    console.log(`HomeScreen: Buscando categoria "${categoryName}", encontrada:`, category ? `${category.count} itens` : 'não encontrada');
     return category ? category.count : 0;
   };
 

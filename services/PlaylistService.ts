@@ -6,8 +6,21 @@ const STORAGE_KEY = 'playlists';
 export class PlaylistService {
   static async addPlaylist(name: string, content: string, url?: string, forceCategory?: string): Promise<void> {
     try {
+      console.log('PlaylistService.addPlaylist: Iniciando adição de playlist:', name);
+      console.log('PlaylistService.addPlaylist: forceCategory:', forceCategory);
+      console.log('PlaylistService.addPlaylist: Tamanho do conteúdo:', content.length);
+      
       const items = this.parseM3U(content, forceCategory);
       console.log('PlaylistService.addPlaylist: Itens parseados do conteúdo:', items.length);
+      
+      // Log detalhado dos primeiros 3 itens para verificar categorização
+      items.slice(0, 3).forEach((item, index) => {
+        console.log(`PlaylistService.addPlaylist: Item ${index + 1}:`, {
+          name: item.name,
+          groupTitle: item.groupTitle,
+          url: item.url.substring(0, 50) + '...'
+        });
+      });
       
       if (items.length === 0) {
         throw new Error('Nenhum item de mídia válido encontrado na playlist.');
@@ -44,21 +57,29 @@ export class PlaylistService {
 
   static async getAllCategories(): Promise<PlaylistCategory[]> {
     try {
+      console.log('PlaylistService.getAllCategories: Iniciando carregamento de categorias');
       const playlists = await this.getPlaylists();
+      console.log('PlaylistService.getAllCategories: Playlists carregadas:', playlists.length);
+      
       const allItems = playlists.flatMap(p => p.items);
+      console.log('PlaylistService.getAllCategories: Total de itens de todas as playlists:', allItems.length);
       
       const categoriesMap = new Map<string, MediaItem[]>();
       
       allItems.forEach(item => {
         const category = item.groupTitle || 'Sem categoria';
+        console.log('PlaylistService.getAllCategories: Processando item:', item.name, 'categoria:', category);
         if (!categoriesMap.has(category)) {
           categoriesMap.set(category, []);
         }
         categoriesMap.get(category)!.push(item);
       });
 
+      console.log('PlaylistService.getAllCategories: Categorias encontradas no mapa:', Array.from(categoriesMap.keys()));
+      
       const categories: PlaylistCategory[] = [];
       categoriesMap.forEach((items, name) => {
+        console.log(`PlaylistService.getAllCategories: Categoria "${name}" com ${items.length} itens`);
         categories.push({
           name,
           count: items.length,
@@ -66,7 +87,10 @@ export class PlaylistService {
         });
       });
 
-      return categories.sort((a, b) => a.name.localeCompare(b.name));
+      const finalCategories = categories.sort((a, b) => a.name.localeCompare(b.name));
+      console.log('PlaylistService.getAllCategories: Categorias finais:', finalCategories.map(c => `${c.name} (${c.count})`));
+      
+      return finalCategories;
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
       return [];
@@ -95,6 +119,8 @@ export class PlaylistService {
   static normalizeGroupTitle(groupTitle: string): string {
     if (!groupTitle) return 'Outros';
     
+    console.log('PlaylistService.normalizeGroupTitle: Normalizando:', groupTitle);
+    
     const title = groupTitle.toLowerCase();
     
     // Categorias de Filmes
@@ -109,6 +135,7 @@ export class PlaylistService {
         title.includes('animacao') || title.includes('animation') || title.includes('aventura') ||
         title.includes('adventure') || title.includes('romance') || title.includes('ficcao') ||
         title.includes('sci-fi') || title.includes('fantasy') || title.includes('fantasia')) {
+      console.log('PlaylistService.normalizeGroupTitle: Categorizado como Filmes');
       return 'Filmes';
     }
     
@@ -122,6 +149,7 @@ export class PlaylistService {
         title.includes('telenovela') || title.includes('anime') || title.includes('animes') ||
         title.includes('desenho') || title.includes('desenhos') || title.includes('cartoon') ||
         title.includes('cartoons') || title.includes('reality') || title.includes('talk show')) {
+      console.log('PlaylistService.normalizeGroupTitle: Categorizado como Séries');
       return 'Séries';
     }
     
@@ -146,9 +174,11 @@ export class PlaylistService {
         title.includes('premium') || title.includes('hd') || title.includes('4k') ||
         title.includes('globo') || title.includes('sbt') || title.includes('record') ||
         title.includes('band') || title.includes('rede tv') || title.includes('cultura')) {
+      console.log('PlaylistService.normalizeGroupTitle: Categorizado como TV');
       return 'TV';
     }
     
+    console.log('PlaylistService.normalizeGroupTitle: Categorizado como Outros');
     return 'Outros';
   }
 
@@ -198,16 +228,13 @@ export class PlaylistService {
         const nameMatch = extinf.match(/,(.+)$/);
         if (nameMatch) {
           currentItem.name = nameMatch[1].trim();
-          console.log('PlaylistService.parseM3U: Nome extraído:', currentItem.name);
         } else {
           // Se não encontrou nome após vírgula, tenta usar tvg-name
           if (currentItem.tvgName) {
             currentItem.name = currentItem.tvgName;
-            console.log('PlaylistService.parseM3U: Nome extraído do tvg-name:', currentItem.name);
           } else {
             // Se não tem tvg-name, usa um nome genérico baseado no índice
             currentItem.name = `Canal ${i + 1}`;
-            console.log('PlaylistService.parseM3U: Nome genérico atribuído:', currentItem.name);
           }
         }
         
@@ -230,7 +257,11 @@ export class PlaylistService {
             duration: currentItem.duration,
           };
           
-          console.log('PlaylistService.parseM3U: Adicionando item:', item.name);
+          console.log('PlaylistService.parseM3U: Adicionando item:', {
+            name: item.name,
+            groupTitle: item.groupTitle,
+            originalGroupTitle: currentItem.groupTitle
+          });
           items.push(item);
         }
         
@@ -250,7 +281,11 @@ export class PlaylistService {
           duration: currentItem.duration,
         };
         
-        console.log('PlaylistService.parseM3U: Adicionando item (URL não-HTTP):', item.name);
+        console.log('PlaylistService.parseM3U: Adicionando item (URL não-HTTP):', {
+          name: item.name,
+          groupTitle: item.groupTitle,
+          originalGroupTitle: currentItem.groupTitle
+        });
         items.push(item);
         
         // Reset for next item
