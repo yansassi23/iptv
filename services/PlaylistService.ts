@@ -156,15 +156,15 @@ export class PlaylistService {
     
     if (cleanGroupTitle.includes('|')) {
       console.log('groupTitle contains | separator');
-      const parts = cleanGroupTitle.split('|').map(part => part.trim()).filter(part => part);
+      const parts = cleanGroupTitle.split('|').map(part => part.trim());
       console.log('Split parts:', parts);
       
       if (parts.length >= 2) {
         // First part becomes main category (normalized)
         const mainCategory = this.normalizeMainCategory(parts[0]);
         
-        // Second part becomes subcategory
-        const subCategory = parts[1];
+        // Second part becomes subcategory (use 'Geral' if empty)
+        const subCategory = parts[1] || 'Geral';
         
         const result = { main: mainCategory, sub: subCategory };
         console.log('Extracted from pipe-separated parts:', result);
