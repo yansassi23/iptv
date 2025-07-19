@@ -156,32 +156,24 @@ export class PlaylistService {
     if (forceCategory) {
       console.log('forceCategory provided:', forceCategory);
       
-      // When forceCategory is provided, use it as main and groupTitle as sub
-      // unless groupTitle is a main category keyword
-      if (this.isMainCategoryKeyword(cleanGroupTitle)) {
-        // If groupTitle is a main category keyword, don't use it as subcategory
-        const result = { main: forceCategory };
-        console.log('groupTitle is main category keyword, result:', result);
-        return result;
-      }
-      
       // Check if groupTitle contains pipe separator
       if (cleanGroupTitle.includes('|')) {
         const parts = cleanGroupTitle.split('|').map(part => part.trim()).filter(part => part);
         console.log('Pipe-separated parts:', parts);
         
-        // Find the best subcategory from the parts
+        // Find the best subcategory from the parts (skip parts that match forceCategory)
         const subCategory = parts.find(part => 
-          !this.isMainCategoryKeyword(part) && 
-          part.toLowerCase() !== forceCategory.toLowerCase()
-        ) || parts[0]; // Fallback to first part
+          part.toLowerCase() !== forceCategory.toLowerCase() &&
+          !this.isExactMainCategoryMatch(part, forceCategory)
+        );
         
-        const result = { main: forceCategory, sub: subCategory };
+        const result = subCategory ? { main: forceCategory, sub: subCategory } : { main: forceCategory };
         console.log('Pipe-separated with forceCategory result:', result);
         return result;
       } else {
-        // Single string - use as subcategory if it's not the same as main category
-        if (cleanGroupTitle.toLowerCase() !== forceCategory.toLowerCase()) {
+        // Single string - use as subcategory if it's not the same as main category and not a main category keyword
+        if (cleanGroupTitle.toLowerCase() !== forceCategory.toLowerCase() && 
+            !this.isExactMainCategoryMatch(cleanGroupTitle, forceCategory)) {
           const result = { main: forceCategory, sub: cleanGroupTitle };
           console.log('Single string with forceCategory result:', result);
           return result;
@@ -238,6 +230,25 @@ export class PlaylistService {
     return mainCategoryKeywords.some(keyword => 
       normalized === keyword || normalized.includes(keyword)
     );
+  }
+
+  static isExactMainCategoryMatch(text: string, forceCategory: string): boolean {
+    if (!text || !forceCategory) return false;
+    
+    const normalized = text.toLowerCase().trim();
+    const forceCategoryNormalized = forceCategory.toLowerCase().trim();
+    
+    // Check if text is exactly the same as forceCategory
+    if (normalized === forceCategoryNormalized) return true;
+    
+    // Check if text is a main category keyword that would conflict with forceCategory
+    const mainCategoryKeywords = [
+      'tv', 'filmes', 'filme', 'movies', 'movie', 'séries', 'series', 'serie',
+      'canais', 'canal', 'channels', 'channel'
+    ];
+    
+    // Only return true if text is exactly one of these keywords (not just contains)
+    return mainCategoryKeywords.includes(normalized);
   }
 
   static normalizeMainCategory(category: string): string {
