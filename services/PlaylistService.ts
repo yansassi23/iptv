@@ -140,51 +140,76 @@ export class PlaylistService {
   }
 
   static extractCategories(groupTitle: string, forceCategory?: string): { main: string; sub?: string } {
-    if (!groupTitle) {
-      return { main: forceCategory || 'Outros' };
-    }
+    console.log('=== extractCategories DEBUG ===');
+    console.log('Input groupTitle:', JSON.stringify(groupTitle));
+    console.log('Input forceCategory:', JSON.stringify(forceCategory));
     
-    console.log('PlaylistService.extractCategories: Extraindo categorias de:', groupTitle);
+    if (!groupTitle) {
+      const result = { main: forceCategory || 'Outros' };
+      console.log('No groupTitle - returning:', result);
+      return result;
+    }
     
     // Se há uma categoria forçada, usa ela como principal
     if (forceCategory) {
+      console.log('forceCategory provided, processing...');
       // Verifica se há subcategoria no groupTitle
       if (groupTitle.includes('|')) {
+        console.log('groupTitle contains | separator');
         const parts = groupTitle.split('|').map(part => part.trim());
+        console.log('Split parts:', parts);
         // Se a primeira parte corresponde à categoria forçada, usa a segunda como subcategoria
         if (parts.length >= 2 && parts[0].toLowerCase() === forceCategory.toLowerCase()) {
-          return { main: forceCategory, sub: parts[1] };
+          const result = { main: forceCategory, sub: parts[1] };
+          console.log('First part matches forceCategory - returning:', result);
+          return result;
         }
         // Se não corresponde, usa a segunda parte como subcategoria mesmo assim
         if (parts.length >= 2) {
-          return { main: forceCategory, sub: parts[1] };
+          const result = { main: forceCategory, sub: parts[1] };
+          console.log('Using second part as subcategory - returning:', result);
+          return result;
         }
       }
       // Se não há separador |, verifica se groupTitle é diferente da categoria forçada
       const normalizedGroupTitle = groupTitle.toLowerCase().trim();
       const normalizedForceCategory = forceCategory.toLowerCase().trim();
+      console.log('Comparing normalized values:');
+      console.log('  normalizedGroupTitle:', JSON.stringify(normalizedGroupTitle));
+      console.log('  normalizedForceCategory:', JSON.stringify(normalizedForceCategory));
       
       // Se o groupTitle é igual à categoria forçada, não cria subcategoria
       if (normalizedGroupTitle === normalizedForceCategory) {
-        return { main: forceCategory };
+        const result = { main: forceCategory };
+        console.log('GroupTitle equals forceCategory - returning:', result);
+        return result;
       }
       
       // Se o groupTitle é diferente, usa como subcategoria
-      return { main: forceCategory, sub: groupTitle };
+      const result = { main: forceCategory, sub: groupTitle };
+      console.log('GroupTitle different from forceCategory - returning:', result);
+      return result;
     }
     
+    console.log('No forceCategory, processing groupTitle normally...');
     // Se há separador |, divide em categoria principal e subcategoria
     if (groupTitle.includes('|')) {
+      console.log('groupTitle contains | separator');
       const parts = groupTitle.split('|').map(part => part.trim());
+      console.log('Split parts:', parts);
       if (parts.length >= 2) {
         const mainCategory = this.normalizeMainCategory(parts[0]);
-        return { main: mainCategory, sub: parts[1] };
+        const result = { main: mainCategory, sub: parts[1] };
+        console.log('Extracted from parts - returning:', result);
+        return result;
       }
     }
     
     // Se não há separador, normaliza como categoria principal
     const mainCategory = this.normalizeMainCategory(groupTitle);
-    return { main: mainCategory };
+    const result = { main: mainCategory };
+    console.log('Normalized as main category - returning:', result);
+    return result;
   }
 
   static normalizeMainCategory(category: string): string {
