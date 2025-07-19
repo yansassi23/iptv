@@ -142,10 +142,9 @@ export class PlaylistService {
   static extractCategories(groupTitle: string, forceCategory?: string): { main: string; sub?: string } {
     console.log('=== extractCategories DEBUG ===');
     console.log('Input groupTitle:', JSON.stringify(groupTitle));
-    console.log('Input forceCategory:', JSON.stringify(forceCategory));
     
     if (!groupTitle || !groupTitle.trim()) {
-      const result = { main: forceCategory || 'Outros' };
+      const result = { main: 'Outros' };
       console.log('No groupTitle - returning:', result);
       return result;
     }
@@ -153,40 +152,8 @@ export class PlaylistService {
     // Clean and normalize the groupTitle
     const cleanGroupTitle = groupTitle.trim();
     
-    if (forceCategory) {
-      console.log('forceCategory provided:', forceCategory);
-      
-      // Check if groupTitle contains pipe separator
-      if (cleanGroupTitle.includes('|')) {
-        const parts = cleanGroupTitle.split('|').map(part => part.trim()).filter(part => part);
-        console.log('Pipe-separated parts:', parts);
-        
-        // Find the best subcategory from the parts (skip parts that match forceCategory)
-        const subCategory = parts.find(part => 
-          part.toLowerCase() !== forceCategory.toLowerCase() &&
-          !this.isExactMainCategoryMatch(part, forceCategory)
-        );
-        
-        const result = subCategory ? { main: forceCategory, sub: subCategory } : { main: forceCategory };
-        console.log('Pipe-separated with forceCategory result:', result);
-        return result;
-      } else {
-        // Single string - use as subcategory if it's not the same as main category and not a main category keyword
-        if (cleanGroupTitle.toLowerCase() !== forceCategory.toLowerCase() && 
-            !this.isExactMainCategoryMatch(cleanGroupTitle, forceCategory)) {
-          const result = { main: forceCategory, sub: cleanGroupTitle };
-          console.log('Single string with forceCategory result:', result);
-          return result;
-        } else {
-          const result = { main: forceCategory };
-          console.log('Single string same as forceCategory, result:', result);
-          return result;
-        }
-      }
-    }
-    
-    // No forceCategory - extract both main and sub from groupTitle
-    console.log('No forceCategory, processing groupTitle normally...');
+    // Extract both main and sub from groupTitle
+    console.log('Processing groupTitle normally...');
     
     if (cleanGroupTitle.includes('|')) {
       console.log('groupTitle contains | separator');
@@ -230,25 +197,6 @@ export class PlaylistService {
     return mainCategoryKeywords.some(keyword => 
       normalized === keyword || normalized.includes(keyword)
     );
-  }
-
-  static isExactMainCategoryMatch(text: string, forceCategory: string): boolean {
-    if (!text || !forceCategory) return false;
-    
-    const normalized = text.toLowerCase().trim();
-    const forceCategoryNormalized = forceCategory.toLowerCase().trim();
-    
-    // Check if text is exactly the same as forceCategory
-    if (normalized === forceCategoryNormalized) return true;
-    
-    // Check if text is a main category keyword that would conflict with forceCategory
-    const mainCategoryKeywords = [
-      'tv', 'filmes', 'filme', 'movies', 'movie', 'séries', 'series', 'serie',
-      'canais', 'canal', 'channels', 'channel'
-    ];
-    
-    // Only return true if text is exactly one of these keywords (not just contains)
-    return mainCategoryKeywords.includes(normalized);
   }
 
   static normalizeMainCategory(category: string): string {
@@ -354,7 +302,15 @@ export class PlaylistService {
         
         // Extract categories from group-title
         const categories = this.extractCategories(rawGroupTitle, forceCategory);
-        currentItem.mainCategory = categories.main;
+        
+        // If no group-title or categories.main is 'Outros', try to infer from name
+        if (!rawGroupTitle || categories.main === 'Outros') {
+          const inferredCategory = this.normalizeMainCategory(currentItem.name || '');
+          currentItem.mainCategory = inferredCategory !== 'Outros' ? inferredCategory : (forceCategory || 'Outros');
+        } else {
+          currentItem.mainCategory = categories.main;
+        }
+        
         currentItem.subCategory = categories.sub;
         
         // Extract name (everything after the last comma)
@@ -383,7 +339,7 @@ export class PlaylistService {
             id: Math.random().toString(36).substr(2, 9),
             name: currentItem.name,
             url: line,
-            mainCategory: currentItem.mainCategory || forceCategory || 'Outros',
+            mainCategory: currentItem.mainCategory || 'Outros',
             subCategory: currentItem.subCategory,
             tvgId: currentItem.tvgId,
             tvgName: currentItem.tvgName,
@@ -408,7 +364,7 @@ export class PlaylistService {
           id: Math.random().toString(36).substr(2, 9),
           name: currentItem.name,
           url: line,
-          mainCategory: currentItem.mainCategory || forceCategory || 'Outros',
+          mainCategory: currentItem.mainCategory || 'Outros',
           subCategory: currentItem.subCategory,
           tvgId: currentItem.tvgId,
           tvgName: currentItem.tvgName,
