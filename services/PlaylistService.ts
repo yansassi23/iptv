@@ -160,7 +160,16 @@ export class PlaylistService {
           return { main: forceCategory, sub: parts[1] };
         }
       }
-      // Se não há separador |, tenta extrair subcategoria do próprio groupTitle
+      // Se não há separador |, verifica se groupTitle é diferente da categoria forçada
+      const normalizedGroupTitle = groupTitle.toLowerCase().trim();
+      const normalizedForceCategory = forceCategory.toLowerCase().trim();
+      
+      // Se o groupTitle é igual à categoria forçada, não cria subcategoria
+      if (normalizedGroupTitle === normalizedForceCategory) {
+        return { main: forceCategory };
+      }
+      
+      // Se o groupTitle é diferente, usa como subcategoria
       return { main: forceCategory, sub: groupTitle };
     }
     
